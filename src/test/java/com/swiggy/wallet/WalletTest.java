@@ -6,20 +6,20 @@ import com.swiggy.wallet.enums.Currency;
 import com.swiggy.wallet.exceptions.InsufficientBalanceException;
 import com.swiggy.wallet.exceptions.InvalidAmountException;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
 
 public class WalletTest {
 
     @Test
     void expectMoneyDeposited() throws InvalidAmountException {
-        Wallet wallet = new Wallet(1,new Money(0, Currency.INR));
-        wallet.deposit( new Money(100,Currency.INR));
+        Money money = mock(Money.class);
+        Wallet wallet = new Wallet(1, money);
+        Money moneyToAdd = new Money(100, Currency.INR);
 
-        Wallet expected = new Wallet(1,new Money(100,Currency.INR));
+        wallet.deposit(moneyToAdd);
 
-        assertEquals(expected, wallet);
+        verify(money, times(1)).add(moneyToAdd);
     }
 
     @Test
@@ -30,13 +30,16 @@ public class WalletTest {
 
     @Test
     void expectMoneyWithdrawn() throws InsufficientBalanceException, InvalidAmountException {
-        Wallet wallet = new Wallet(1,new Money(0, Currency.INR));
-        wallet.deposit(new Money(100, Currency.INR));
-        wallet.withdraw(new Money(50,Currency.INR));
+        Money money = mock(Money.class);
+        Wallet wallet = new Wallet(1,money);
+        Money moneyToAdd = new Money(100, Currency.INR);
+        Money moneyToWithdraw = new Money(50, Currency.INR);
 
-        Wallet expected = new Wallet(1, new Money(50, Currency.INR));
+        wallet.deposit(moneyToAdd);
+        wallet.withdraw(moneyToWithdraw);
 
-        assertEquals(expected, wallet);
+        verify(money, times(1)).add(moneyToAdd);
+        verify(money, times(1)).subtract(moneyToWithdraw);
     }
 
     @Test

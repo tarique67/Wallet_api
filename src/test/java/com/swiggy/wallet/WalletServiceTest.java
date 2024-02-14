@@ -15,10 +15,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.util.Optional;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest
 public class WalletServiceTest {
@@ -28,6 +26,9 @@ public class WalletServiceTest {
     @MockBean
     private WalletDAO walletDao;
 
+    @MockBean
+    private Wallet wallet;
+
     @BeforeEach
     public void setup(){
         reset(walletDao);
@@ -36,13 +37,12 @@ public class WalletServiceTest {
     @Test
     void expectAmountDepositedWithValidAmount() throws Exception {
         WalletRequestModel requestModel = new WalletRequestModel(new Money(50,Currency.INR));
-        Wallet wallet = new Wallet(1,new Money(0, Currency.INR));
         when(walletDao.findById(1)).thenReturn(Optional.of(wallet));
 
-        Wallet actualWallet = walletService.deposit(requestModel);
-        Wallet expectedWallet = new Wallet(1, new Money(50,Currency.INR));
+        walletService.deposit(requestModel);
 
-        assertEquals(expectedWallet, actualWallet);
+        verify(wallet, times(1)).deposit(any(Money.class));
+        verify(walletDao, times(1)).save(any(Wallet.class));
     }
 
     @Test
@@ -57,13 +57,12 @@ public class WalletServiceTest {
     @Test
     void expectAmountWithdrawn() throws Exception {
         WalletRequestModel requestModel = new WalletRequestModel(new Money(50, Currency.INR));
-        Wallet wallet = new Wallet(1,new Money(100, Currency.INR));
         when(walletDao.findById(1)).thenReturn(Optional.of(wallet));
 
-        Wallet actualResponse = walletService.withdraw(requestModel);
-        Wallet expectedWallet = new Wallet(1,new Money(50, Currency.INR));
+        walletService.withdraw(requestModel);
 
-        assertEquals(expectedWallet, actualResponse);
+        verify(wallet, times(1)).withdraw(any(Money.class));
+        verify(walletDao, times(1)).save(any(Wallet.class));
     }
 
     @Test
