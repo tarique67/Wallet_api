@@ -5,14 +5,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@AllArgsConstructor
+@NoArgsConstructor
 @Getter
 @Setter
-@NoArgsConstructor
-public class WalletRequestModel {
+public class WalletResponseModel {
 
+    private Integer walletId;
     private Money money;
-
-    public WalletRequestModel(Money money) {
-        this.money = money;
-    }
 }

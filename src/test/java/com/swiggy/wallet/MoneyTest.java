@@ -58,4 +58,11 @@ public class MoneyTest {
 
         assertThrows(InsufficientBalanceException.class, ()-> money.subtract(new Money(50, Currency.INR)));
     }
+
+    @Test
+    void expectExceptionAddingNegativeMoney() {
+        Money money = new Money(100,Currency.INR);
+
+        assertThrows(InvalidAmountException.class, ()-> money.subtract(new Money(-50, Currency.INR)));
+    }
 }

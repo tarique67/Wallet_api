@@ -17,8 +17,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -55,12 +54,12 @@ public class WalletControllerTest {
         WalletRequestModel requestModel = new WalletRequestModel(new Money(50, Currency.INR));
         String requestBody = objectMapper.writeValueAsString(requestModel);
 
-        mockMvc.perform(put("/deposit")
+        mockMvc.perform(put("/1/deposit")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isAccepted());
 
-        verify(walletService, times(1)).deposit(any(WalletRequestModel.class));
+        verify(walletService, times(1)).deposit(any(Integer.class), any(WalletRequestModel.class));
     }
 
     @Test
@@ -69,12 +68,22 @@ public class WalletControllerTest {
         WalletRequestModel requestModel = new WalletRequestModel(new Money(50, Currency.INR));
         String requestBody = objectMapper.writeValueAsString(requestModel);
 
-        mockMvc.perform(put("/withdraw")
+        mockMvc.perform(put("/1/withdraw")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isAccepted());
 
-        verify(walletService, times(1)).withdraw(any(WalletRequestModel.class));
+        verify(walletService, times(1)).withdraw(any(Integer.class), any(WalletRequestModel.class));
+    }
+
+    @Test
+    @WithMockUser(username = "user", password = "password", roles = "USER")
+    void expectWalletListForUser() throws Exception {
+        mockMvc.perform(get("/wallets")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        verify(walletService, times(1)).getAllWallets();
     }
 
 }
