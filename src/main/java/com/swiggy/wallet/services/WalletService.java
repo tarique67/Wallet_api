@@ -6,11 +6,11 @@ import com.swiggy.wallet.exceptions.InsufficientBalanceException;
 import com.swiggy.wallet.exceptions.InvalidAmountException;
 
 
-public interface WalletServices {
+public interface WalletService {
 
     Wallet deposit(WalletRequestModel requestModel) throws InvalidAmountException;
 
-    Wallet withdraw(WalletRequestModel requestModel) throws InsufficientBalanceException;
+    Wallet withdraw(WalletRequestModel requestModel) throws InsufficientBalanceException, InvalidAmountException;
 
     Wallet create(Wallet wallet);
 }

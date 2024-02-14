@@ -1,11 +1,9 @@
 package com.swiggy.wallet.entities;
 
+import com.swiggy.wallet.enums.Currency;
 import com.swiggy.wallet.exceptions.InsufficientBalanceException;
 import com.swiggy.wallet.exceptions.InvalidAmountException;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -21,21 +19,17 @@ public class Wallet {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer walletId;
 
-    private int balance;
+    private Money money;
 
     public Wallet() {
-        this.balance = 0;
+        this.money = new Money(0.0, Currency.INR);
     }
 
-    public void deposit(int money) throws InvalidAmountException {
-        if(money < 0)
-            throw new InvalidAmountException("Amount cannot be negative.");
-        this.balance += money;
+    public void deposit(Money money) throws InvalidAmountException {
+        this.money.add(money);
     }
 
-    public void withdraw(int money) throws InsufficientBalanceException {
-        if(money > this.balance)
-            throw new InsufficientBalanceException("Insufficient balance.");
-        this.balance -= money;
+    public void withdraw(Money money) throws InsufficientBalanceException, InvalidAmountException {
+        this.money.subtract(money);
     }
 }

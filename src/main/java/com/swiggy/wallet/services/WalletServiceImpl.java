@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.NoSuchElementException;
 
 @Service
-public class WalletServicesImpl implements WalletServices{
+public class WalletServiceImpl implements WalletService {
 
     @Autowired
     private WalletDAO walletDao;
@@ -32,7 +32,7 @@ public class WalletServicesImpl implements WalletServices{
     }
 
     @Override
-    public Wallet withdraw(WalletRequestModel requestModel) throws InsufficientBalanceException {
+    public Wallet withdraw(WalletRequestModel requestModel) throws InsufficientBalanceException, InvalidAmountException {
         Wallet wallet = walletDao.findById(1).orElseThrow(()-> new NoSuchElementException("Wallet Not Found"));
 
         wallet.withdraw(requestModel.getMoney());

@@ -4,7 +4,7 @@ import com.swiggy.wallet.entities.Wallet;
 import com.swiggy.wallet.entities.WalletRequestModel;
 import com.swiggy.wallet.exceptions.InsufficientBalanceException;
 import com.swiggy.wallet.exceptions.InvalidAmountException;
-import com.swiggy.wallet.services.WalletServices;
+import com.swiggy.wallet.services.WalletService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 public class WalletController {
 
     @Autowired
-    private WalletServices walletService;
+    private WalletService walletService;
 
     @GetMapping("/hello")
     public ResponseEntity<String> sayHello(){
@@ -25,7 +25,7 @@ public class WalletController {
     public ResponseEntity<Wallet> create(){
         Wallet returnedWallet = walletService.create(new Wallet());
 
-        return new ResponseEntity<>(returnedWallet, HttpStatus.ACCEPTED);
+        return new ResponseEntity<>(returnedWallet, HttpStatus.CREATED);
     }
 
     @PutMapping("/deposit")
@@ -36,7 +36,7 @@ public class WalletController {
     }
 
     @PutMapping("/withdraw")
-    public ResponseEntity<Wallet> withdraw(@RequestBody WalletRequestModel requestModel) throws InsufficientBalanceException {
+    public ResponseEntity<Wallet> withdraw(@RequestBody WalletRequestModel requestModel) throws InsufficientBalanceException, InvalidAmountException {
         Wallet returnedWallet = walletService.withdraw(requestModel);
 
         return new ResponseEntity<>(returnedWallet, HttpStatus.ACCEPTED);

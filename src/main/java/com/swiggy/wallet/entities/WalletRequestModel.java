@@ -10,6 +10,11 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class WalletRequestModel {
+
     private int walletId;
-    private int money;
+    private Money money;
+
+    public WalletRequestModel(Money money) {
+        this.money = money;
+    }
 }
