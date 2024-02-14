@@ -6,14 +6,20 @@ import com.swiggy.wallet.enums.Currency;
 import com.swiggy.wallet.exceptions.InsufficientBalanceException;
 import com.swiggy.wallet.exceptions.InvalidAmountException;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
+@SpringBootTest
 public class WalletTest {
+
+    @MockBean
+    private Money money;
 
     @Test
     void expectMoneyDeposited() throws InvalidAmountException {
-        Money money = mock(Money.class);
         Wallet wallet = new Wallet(1, money);
         Money moneyToAdd = new Money(100, Currency.INR);
 
@@ -30,7 +36,6 @@ public class WalletTest {
 
     @Test
     void expectMoneyWithdrawn() throws InsufficientBalanceException, InvalidAmountException {
-        Money money = mock(Money.class);
         Wallet wallet = new Wallet(1,money);
         Money moneyToAdd = new Money(100, Currency.INR);
         Money moneyToWithdraw = new Money(50, Currency.INR);
@@ -43,7 +48,7 @@ public class WalletTest {
     }
 
     @Test
-    void expectExceptionForInsufficientBalanceWithdrawn() throws InsufficientBalanceException {
+    void expectExceptionForInsufficientBalanceWithdrawn() throws InsufficientBalanceException, InvalidAmountException {
         Wallet wallet = new Wallet();
         assertThrows(InsufficientBalanceException.class, ()-> wallet.withdraw(new Money(100, Currency.INR)));
     }

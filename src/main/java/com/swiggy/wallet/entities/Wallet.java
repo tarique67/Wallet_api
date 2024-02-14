@@ -10,7 +10,6 @@ import lombok.Getter;
 import org.springframework.stereotype.Component;
 
 @Getter
-//@EqualsAndHashCode
 @AllArgsConstructor
 @Entity
 public class Wallet {

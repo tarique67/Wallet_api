@@ -25,12 +25,31 @@ public class MoneyTest {
     }
 
     @Test
+    void expectMoneyAddedForDifferentCurrency() throws InvalidAmountException {
+        Money money = new Money(0,Currency.INR);
+
+        money.add(new Money(100, Currency.USD));
+
+        assertEquals(new Money(8310, Currency.INR), money);
+    }
+
+    @Test
     void expectMoneySubtracted() throws InvalidAmountException, InsufficientBalanceException {
         Money money = new Money(100,Currency.INR);
 
         money.subtract(new Money(50, Currency.INR));
 
         assertEquals(new Money(50, Currency.INR), money);
+    }
+
+    @Test
+    void expectMoneySubtractedForDifferentCurrency() throws InvalidAmountException, InsufficientBalanceException {
+        Money money = new Money(0,Currency.INR);
+        money.add(new Money(100, Currency.USD));
+
+        money.subtract(new Money(100, Currency.USD));
+
+        assertEquals(new Money(0.0, Currency.INR), money);
     }
 
     @Test
