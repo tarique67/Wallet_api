@@ -46,7 +46,7 @@ public class WalletControllerTest {
     @Test
     @WithMockUser(username = "user", password = "password", roles = "USER")
     void expectWalletCreatedSuccessfully() throws Exception {
-        mockMvc.perform(post("/wallet")
+        mockMvc.perform(post("/api/v1/wallets")
                         .contentType(MediaType.APPLICATION_JSON))
                         .andExpect(status().isCreated());
 
@@ -59,7 +59,7 @@ public class WalletControllerTest {
         WalletRequestModel requestModel = new WalletRequestModel(new Money(50, Currency.INR));
         String requestBody = objectMapper.writeValueAsString(requestModel);
 
-        mockMvc.perform(put("/1/deposit")
+        mockMvc.perform(put("/api/v1/wallets/1/deposit")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isAccepted());
@@ -73,7 +73,7 @@ public class WalletControllerTest {
         WalletRequestModel requestModel = new WalletRequestModel(new Money(50, Currency.INR));
         String requestBody = objectMapper.writeValueAsString(requestModel);
 
-        mockMvc.perform(put("/1/withdraw")
+        mockMvc.perform(put("/api/v1/wallets/1/withdraw")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isAccepted());
@@ -88,7 +88,7 @@ public class WalletControllerTest {
         WalletResponseModel secondWallet = new WalletResponseModel();
         when(walletService.getAllWallets()).thenReturn(Arrays.asList(firstWallet, secondWallet));
 
-        MvcResult mockResult = mockMvc.perform(get("/wallets")
+        MvcResult mockResult = mockMvc.perform(get("/api/v1/wallets")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         String responseContent = mockResult.getResponse().getContentAsString();

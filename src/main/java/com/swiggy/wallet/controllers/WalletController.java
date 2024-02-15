@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequestMapping("/api/v1/wallets")
 public class WalletController {
 
     @Autowired
@@ -24,7 +25,7 @@ public class WalletController {
         return new ResponseEntity<>("Hello", HttpStatus.OK);
     }
 
-    @PostMapping("/wallet")
+    @PostMapping("")
     public ResponseEntity<Wallet> create(){
         Wallet returnedWallet = walletService.create(new Wallet());
 
@@ -45,7 +46,7 @@ public class WalletController {
         return new ResponseEntity<>(returnedWallet, HttpStatus.ACCEPTED);
     }
 
-    @GetMapping("/wallets")
+    @GetMapping("")
     public ResponseEntity<List<WalletResponseModel>> wallets(){
         List<WalletResponseModel> responseWallets = walletService.getAllWallets();
 
