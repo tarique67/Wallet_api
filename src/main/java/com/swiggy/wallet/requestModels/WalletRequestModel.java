@@ -1,6 +1,6 @@
-package com.swiggy.wallet.entities;
+package com.swiggy.wallet.requestModels;
 
-import lombok.AllArgsConstructor;
+import com.swiggy.wallet.entities.Money;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

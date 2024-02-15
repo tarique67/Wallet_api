@@ -2,8 +2,8 @@ package com.swiggy.wallet;
 
 import com.swiggy.wallet.entities.Money;
 import com.swiggy.wallet.entities.Wallet;
-import com.swiggy.wallet.entities.WalletRequestModel;
-import com.swiggy.wallet.entities.WalletResponseModel;
+import com.swiggy.wallet.requestModels.WalletRequestModel;
+import com.swiggy.wallet.responseModels.WalletResponseModel;
 import com.swiggy.wallet.enums.Currency;
 import com.swiggy.wallet.repository.WalletDAO;
 import com.swiggy.wallet.services.WalletService;
