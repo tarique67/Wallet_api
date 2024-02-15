@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swiggy.wallet.entities.Money;
 import com.swiggy.wallet.entities.Wallet;
 import com.swiggy.wallet.entities.WalletRequestModel;
+import com.swiggy.wallet.entities.WalletResponseModel;
 import com.swiggy.wallet.enums.Currency;
 import com.swiggy.wallet.services.WalletService;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,7 +16,11 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.Arrays;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -73,17 +78,24 @@ public class WalletControllerTest {
                         .content(requestBody))
                 .andExpect(status().isAccepted());
 
-        verify(walletService, times(1)).withdraw(any(Integer.class), any(WalletRequestModel.class));
+        verify(walletService, times(1)).withdraw(eq(1), any(WalletRequestModel.class));
     }
 
     @Test
     @WithMockUser(username = "user", password = "password", roles = "USER")
     void expectWalletListForUser() throws Exception {
-        mockMvc.perform(get("/wallets")
+        WalletResponseModel firstWallet = new WalletResponseModel();
+        WalletResponseModel secondWallet = new WalletResponseModel();
+        when(walletService.getAllWallets()).thenReturn(Arrays.asList(firstWallet, secondWallet));
+
+        MvcResult mockResult = mockMvc.perform(get("/wallets")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()).andReturn();
+        String responseContent = mockResult.getResponse().getContentAsString();
+        WalletResponseModel[] walletResponse = objectMapper.readValue(responseContent, WalletResponseModel[].class);
 
         verify(walletService, times(1)).getAllWallets();
+        assertEquals(2, walletResponse.length);
     }
 
 }

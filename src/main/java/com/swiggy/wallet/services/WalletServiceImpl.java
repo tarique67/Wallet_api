@@ -27,7 +27,6 @@ public class WalletServiceImpl implements WalletService {
     @Override
     public List<WalletResponseModel> getAllWallets() {
         List<Wallet> wallets = walletDao.findAll();
-        if(wallets.isEmpty()) throw new NoSuchElementException("No wallets available currently.");
         List<WalletResponseModel> response = new ArrayList<>();
         for(Wallet wallet : wallets){
             response.add(new WalletResponseModel(wallet.getWalletId(), wallet.getMoney()));

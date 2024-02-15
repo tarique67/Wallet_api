@@ -79,7 +79,7 @@ public class WalletServiceTest {
     @Test
     void expectWalletListSize2() throws Exception {
         Wallet firstWallet = new Wallet(1, new Money(0, Currency.INR));
-        Wallet secondWallet = new Wallet(1, new Money(0, Currency.INR));
+        Wallet secondWallet = new Wallet(2, new Money(0, Currency.INR));
         when(walletDao.findAll()).thenReturn(Arrays.asList(firstWallet,secondWallet));
 
         List<WalletResponseModel> wallets = walletService.getAllWallets();
