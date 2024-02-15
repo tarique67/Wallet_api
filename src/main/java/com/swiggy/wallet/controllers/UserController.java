@@ -18,12 +18,8 @@ public class UserController {
 
     @PostMapping("")
     public ResponseEntity<User> registerUser(@RequestBody UserRequestModel user) throws UserAlreadyExistsException {
-        User returnedUser = userService.registerCustomer(user);
+        User returnedUser = userService.register(user);
         return new ResponseEntity<>(returnedUser, HttpStatus.CREATED);
     }
 
-    @GetMapping("")
-    public String hello(){
-        return "Hello";
-    }
 }

@@ -6,6 +6,6 @@ import com.swiggy.wallet.requestModels.UserRequestModel;
 
 public interface UserService {
 
-    User registerCustomer(UserRequestModel user) throws UserAlreadyExistsException;
+    User register(UserRequestModel user) throws UserAlreadyExistsException;
 
 }

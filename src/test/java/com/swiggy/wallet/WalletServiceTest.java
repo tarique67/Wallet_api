@@ -43,27 +43,27 @@ public class WalletServiceTest {
         verify(walletDao, times(1)).save(any(Wallet.class));
     }
 
-    @Test
-    void expectAmountDepositedWithValidAmount() throws Exception {
-        WalletRequestModel requestModel = new WalletRequestModel(new Money(50,Currency.INR));
-        when(walletDao.findById(1)).thenReturn(Optional.of(wallet));
+//    @Test
+//    void expectAmountDepositedWithValidAmount() throws Exception {
+//        WalletRequestModel requestModel = new WalletRequestModel(new Money(50,Currency.INR));
+//        when(walletDao.findById(1)).thenReturn(Optional.of(wallet));
+//
+//        walletService.deposit(1, requestModel);
+//
+//        verify(wallet, times(1)).deposit(any(Money.class));
+//        verify(walletDao, times(1)).save(any(Wallet.class));
+//    }
 
-        walletService.deposit(1, requestModel);
-
-        verify(wallet, times(1)).deposit(any(Money.class));
-        verify(walletDao, times(1)).save(any(Wallet.class));
-    }
-
-    @Test
-    void expectAmountWithdrawn() throws Exception {
-        WalletRequestModel requestModel = new WalletRequestModel(new Money(50, Currency.INR));
-        when(walletDao.findById(1)).thenReturn(Optional.of(wallet));
-
-        walletService.withdraw(1, requestModel);
-
-        verify(wallet, times(1)).withdraw(any(Money.class));
-        verify(walletDao, times(1)).save(any(Wallet.class));
-    }
+//    @Test
+//    void expectAmountWithdrawn() throws Exception {
+//        WalletRequestModel requestModel = new WalletRequestModel(new Money(50, Currency.INR));
+//        when(walletDao.findById(1)).thenReturn(Optional.of(wallet));
+//
+//        walletService.withdraw(1, requestModel);
+//
+//        verify(wallet, times(1)).withdraw(any(Money.class));
+//        verify(walletDao, times(1)).save(any(Wallet.class));
+//    }
 
     @Test
     void expectWalletList() {

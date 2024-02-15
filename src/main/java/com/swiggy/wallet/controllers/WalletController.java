@@ -1,6 +1,7 @@
 package com.swiggy.wallet.controllers;
 
 import com.swiggy.wallet.entities.Wallet;
+import com.swiggy.wallet.exceptions.AuthenticationFailedException;
 import com.swiggy.wallet.requestModels.WalletRequestModel;
 import com.swiggy.wallet.responseModels.WalletResponseModel;
 import com.swiggy.wallet.exceptions.InsufficientBalanceException;
@@ -34,16 +35,21 @@ public class WalletController {
         return new ResponseEntity<>(returnedWallet, HttpStatus.CREATED);
     }
 
-    @PutMapping("/{wallet_id}/deposit")
-    public ResponseEntity<Wallet> deposit(@PathVariable("wallet_id") int walletId, @RequestBody WalletRequestModel requestModel) throws InvalidAmountException {
-        Wallet returnedWallet = walletService.deposit(walletId, requestModel);
+    @PutMapping("/deposit")
+    public ResponseEntity<Wallet> deposit(@RequestBody WalletRequestModel requestModel) throws InvalidAmountException, AuthenticationFailedException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        Wallet returnedWallet = walletService.deposit(username, requestModel);
 
         return new ResponseEntity<>(returnedWallet, HttpStatus.ACCEPTED);
     }
 
-    @PutMapping("/{wallet_id}/withdraw")
-    public ResponseEntity<Wallet> withdraw(@PathVariable("wallet_id") int walletId, @RequestBody WalletRequestModel requestModel) throws InsufficientBalanceException, InvalidAmountException {
-        Wallet returnedWallet = walletService.withdraw(walletId, requestModel);
+    @PutMapping("/withdraw")
+    public ResponseEntity<Wallet> withdraw(@RequestBody WalletRequestModel requestModel) throws InsufficientBalanceException, InvalidAmountException, AuthenticationFailedException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+
+        Wallet returnedWallet = walletService.withdraw(username, requestModel);
 
         return new ResponseEntity<>(returnedWallet, HttpStatus.ACCEPTED);
     }
@@ -51,12 +57,6 @@ public class WalletController {
     @GetMapping("")
     public ResponseEntity<List<WalletResponseModel>> wallets(){
         List<WalletResponseModel> responseWallets = walletService.getAllWallets();
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        // Get the username from the authentication object
-        String username = authentication.getName();
-        System.out.println(username);
 
         return new ResponseEntity<>(responseWallets, HttpStatus.OK);
     }

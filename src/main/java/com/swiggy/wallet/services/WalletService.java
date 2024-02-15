@@ -1,6 +1,7 @@
 package com.swiggy.wallet.services;
 
 import com.swiggy.wallet.entities.Wallet;
+import com.swiggy.wallet.exceptions.AuthenticationFailedException;
 import com.swiggy.wallet.requestModels.WalletRequestModel;
 import com.swiggy.wallet.responseModels.WalletResponseModel;
 import com.swiggy.wallet.exceptions.InsufficientBalanceException;
@@ -11,9 +12,9 @@ import java.util.List;
 
 public interface WalletService {
 
-    Wallet deposit(int walletId, WalletRequestModel requestModel) throws InvalidAmountException;
+    Wallet deposit(String walletId, WalletRequestModel requestModel) throws InvalidAmountException, AuthenticationFailedException;
 
-    Wallet withdraw(int walletId, WalletRequestModel requestModel) throws InsufficientBalanceException, InvalidAmountException;
+    Wallet withdraw(String walletId, WalletRequestModel requestModel) throws InsufficientBalanceException, InvalidAmountException, AuthenticationFailedException;
 
     Wallet create(Wallet wallet);
 

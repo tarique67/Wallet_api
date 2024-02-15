@@ -19,7 +19,7 @@ public class UserServiceImpl implements UserService{
     private PasswordEncoder passwordEncoder;
 
     @Override
-    public User registerCustomer(UserRequestModel user) throws UserAlreadyExistsException {
+    public User register(UserRequestModel user) throws UserAlreadyExistsException {
         if(userDao.findByUserName(user.getUserName()).isPresent())
             throw new UserAlreadyExistsException("Username taken. Please try with another username.");
         User userToSave = new User(user.getUserName(), passwordEncoder.encode(user.getPassword()), new Wallet());

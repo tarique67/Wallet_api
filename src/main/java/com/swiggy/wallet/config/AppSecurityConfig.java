@@ -23,11 +23,12 @@ public class AppSecurityConfig {
 
         http.csrf().disable()
                 .authorizeHttpRequests((authorize) -> {
-                    authorize.requestMatchers(HttpMethod.POST,"/api/v1/users").permitAll()
+                    authorize.requestMatchers(HttpMethod.POST,"/api/v1/users").permitAll().
+                            requestMatchers(HttpMethod.POST, "/api/v1/wallets").denyAll()
                             .anyRequest().authenticated();
                 }).headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable)).httpBasic(Customizer.withDefaults());
 
         return http.build();
     }
-    
+
 }
