@@ -39,7 +39,7 @@ public class UserControllerTest {
     }
 
     @Test
-    void testRegisterUser() throws Exception {
+    void expectUserCreated() throws Exception {
         UserRequestModel userRequestModel = new UserRequestModel("testUser", "testPassword");
         User user = new User("testUser", "testPassword", new Wallet());
 
@@ -54,7 +54,7 @@ public class UserControllerTest {
     }
 
     @Test
-    void testRegisterUser_UserAlreadyExists() throws Exception {
+    void expectUserAlreadyExists() throws Exception {
         UserRequestModel userRequestModel = new UserRequestModel("testUser","testPassword");
 
         when(userService.register(userRequestModel)).thenThrow(UserAlreadyExistsException.class);

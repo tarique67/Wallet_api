@@ -11,7 +11,5 @@ import lombok.Setter;
 @Getter
 @Setter
 public class WalletResponseModel {
-
-    private Integer walletId;
     private Money money;
 }

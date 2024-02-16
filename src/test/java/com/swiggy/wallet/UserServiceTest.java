@@ -55,7 +55,7 @@ public class UserServiceTest {
     }
 
     @Test
-    void testRegisterCustomer_UserAlreadyExists() {
+    void expectUserAlreadyExistsException() {
         when(userDao.findByUserName("existingUser")).thenReturn(Optional.of(new User()));
         UserRequestModel userRequestModel = new UserRequestModel("existingUser", "password");
 

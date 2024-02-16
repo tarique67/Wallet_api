@@ -1,6 +1,5 @@
 package com.swiggy.wallet.controllers;
 
-import com.swiggy.wallet.entities.Wallet;
 import com.swiggy.wallet.exceptions.AuthenticationFailedException;
 import com.swiggy.wallet.requestModels.WalletRequestModel;
 import com.swiggy.wallet.responseModels.WalletResponseModel;
@@ -28,28 +27,21 @@ public class WalletController {
         return new ResponseEntity<>("Hello", HttpStatus.OK);
     }
 
-    @PostMapping("")
-    public ResponseEntity<Wallet> create(){
-        Wallet returnedWallet = walletService.create(new Wallet());
-
-        return new ResponseEntity<>(returnedWallet, HttpStatus.CREATED);
-    }
-
     @PutMapping("/deposit")
-    public ResponseEntity<Wallet> deposit(@RequestBody WalletRequestModel requestModel) throws InvalidAmountException, AuthenticationFailedException {
+    public ResponseEntity<WalletResponseModel> deposit(@RequestBody WalletRequestModel requestModel) throws InvalidAmountException, AuthenticationFailedException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
-        Wallet returnedWallet = walletService.deposit(username, requestModel);
+        WalletResponseModel returnedWallet = walletService.deposit(username, requestModel);
 
         return new ResponseEntity<>(returnedWallet, HttpStatus.ACCEPTED);
     }
 
     @PutMapping("/withdraw")
-    public ResponseEntity<Wallet> withdraw(@RequestBody WalletRequestModel requestModel) throws InsufficientBalanceException, InvalidAmountException, AuthenticationFailedException {
+    public ResponseEntity<WalletResponseModel> withdraw(@RequestBody WalletRequestModel requestModel) throws InsufficientBalanceException, InvalidAmountException, AuthenticationFailedException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
 
-        Wallet returnedWallet = walletService.withdraw(username, requestModel);
+        WalletResponseModel returnedWallet = walletService.withdraw(username, requestModel);
 
         return new ResponseEntity<>(returnedWallet, HttpStatus.ACCEPTED);
     }

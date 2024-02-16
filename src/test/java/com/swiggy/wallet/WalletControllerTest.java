@@ -43,14 +43,6 @@ public class WalletControllerTest {
         reset(walletService);
     }
 
-    @Test
-    @WithMockUser(username = "user", password = "password", roles = "USER")
-    void expectWalletCreatedSuccessfully() throws Exception {
-        mockMvc.perform(post("/api/v1/wallets")
-                        .contentType(MediaType.APPLICATION_JSON))
-                        .andExpect(status().isForbidden());
-    }
-
 //    @Test
 //    @WithMockUser(username = "user", password = "password", roles = "USER")
 //    void expectAmountDepositedSuccessfully() throws Exception {

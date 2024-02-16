@@ -12,9 +12,9 @@ import java.util.List;
 
 public interface WalletService {
 
-    Wallet deposit(String walletId, WalletRequestModel requestModel) throws InvalidAmountException, AuthenticationFailedException;
+    WalletResponseModel deposit(String walletId, WalletRequestModel requestModel) throws InvalidAmountException, AuthenticationFailedException;
 
-    Wallet withdraw(String walletId, WalletRequestModel requestModel) throws InsufficientBalanceException, InvalidAmountException, AuthenticationFailedException;
+    WalletResponseModel withdraw(String walletId, WalletRequestModel requestModel) throws InsufficientBalanceException, InvalidAmountException, AuthenticationFailedException;
 
     Wallet create(Wallet wallet);
 

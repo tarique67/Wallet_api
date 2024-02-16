@@ -34,28 +34,28 @@ public class WalletServiceImpl implements WalletService {
         List<Wallet> wallets = walletDao.findAll();
         List<WalletResponseModel> response = new ArrayList<>();
         for(Wallet wallet : wallets){
-            response.add(new WalletResponseModel(wallet.getWalletId(), wallet.getMoney()));
+            response.add(new WalletResponseModel(wallet.getMoney()));
         }
         return response;
     }
 
     @Override
-    public Wallet deposit(String username, WalletRequestModel requestModel) throws InvalidAmountException, AuthenticationFailedException {
+    public WalletResponseModel deposit(String username, WalletRequestModel requestModel) throws InvalidAmountException, AuthenticationFailedException {
         User user = userDao.findByUserName(username).orElseThrow(() -> new AuthenticationFailedException("Username or password does not match."));
 
         user.getWallet().deposit(requestModel.getMoney());
 
         userDao.save(user);
-        return user.getWallet();
+        return new WalletResponseModel(user.getWallet().getMoney());
     }
 
     @Override
-    public Wallet withdraw(String username, WalletRequestModel requestModel) throws InsufficientBalanceException, InvalidAmountException, AuthenticationFailedException {
+    public WalletResponseModel withdraw(String username, WalletRequestModel requestModel) throws InsufficientBalanceException, InvalidAmountException, AuthenticationFailedException {
         User user = userDao.findByUserName(username).orElseThrow(() -> new AuthenticationFailedException("Username or password does not match."));
 
         user.getWallet().withdraw(requestModel.getMoney());
 
         userDao.save(user);
-        return user.getWallet();
+        return new WalletResponseModel(user.getWallet().getMoney());
     }
 }
