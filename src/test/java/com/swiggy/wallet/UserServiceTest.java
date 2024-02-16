@@ -63,6 +63,7 @@ public class UserServiceTest {
             userService.register(userRequestModel);
         });
         verify(userDao, times(1)).findByUserName("existingUser");
+        verify(userDao, never()).save(any());
     }
 
 }
