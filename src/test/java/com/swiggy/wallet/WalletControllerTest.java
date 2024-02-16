@@ -14,6 +14,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -23,6 +26,7 @@ import java.util.Arrays;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -43,33 +47,36 @@ public class WalletControllerTest {
         reset(walletService);
     }
 
-//    @Test
-//    @WithMockUser(username = "user", password = "password", roles = "USER")
-//    void expectAmountDepositedSuccessfully() throws Exception {
-//        WalletRequestModel requestModel = new WalletRequestModel(new Money(50, Currency.INR));
-//        String requestBody = objectMapper.writeValueAsString(requestModel);
-//
-//        mockMvc.perform(put("/api/v1/wallets/1/deposit")
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(requestBody))
-//                .andExpect(status().isAccepted());
-//
-//        verify(walletService, times(1)).deposit(any(Integer.class), any(WalletRequestModel.class));
-//    }
+    @Test
+    @WithMockUser(username = "user")
+    void expectAmountDepositedSuccessfully() throws Exception {
+        WalletRequestModel requestModel = new WalletRequestModel(new Money(100, Currency.INR));
+        WalletResponseModel responseModel = new WalletResponseModel(new Money(100, Currency.INR));
+        when(walletService.deposit(anyString(), any())).thenReturn(responseModel);
 
-//    @Test
-//    @WithMockUser(username = "user", password = "password", roles = "USER")
-//    void expectWithdrawalSuccessfully() throws Exception {
-//        WalletRequestModel requestModel = new WalletRequestModel(new Money(50, Currency.INR));
-//        String requestBody = objectMapper.writeValueAsString(requestModel);
-//
-//        mockMvc.perform(put("/api/v1/wallets/1/withdraw")
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(requestBody))
-//                .andExpect(status().isAccepted());
-//
-//        verify(walletService, times(1)).withdraw(eq(1), any(WalletRequestModel.class));
-//    }
+        mockMvc.perform(put("/api/v1/wallets/deposit")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestModel)))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.money.amount").value("100.0"));
+        verify(walletService, times(1)).deposit(anyString(),any());
+    }
+
+    @Test
+    @WithMockUser(username = "user")
+    void expectWithdrawalSuccessfully() throws Exception {
+        WalletRequestModel requestModel = new WalletRequestModel(new Money(50, Currency.INR));
+        String requestBody = objectMapper.writeValueAsString(requestModel);
+        WalletResponseModel responseModel = new WalletResponseModel(new Money(50, Currency.INR));
+        when(walletService.withdraw(anyString(), any())).thenReturn(responseModel);
+
+        mockMvc.perform(put("/api/v1/wallets/withdraw")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.money.amount").value("50.0"));
+        verify(walletService, times(1)).withdraw(anyString(), any(WalletRequestModel.class));
+    }
 
     @Test
     @WithMockUser(username = "user", password = "password", roles = "USER")
