@@ -1,7 +1,6 @@
 package com.swiggy.wallet.security;
 
 import com.swiggy.wallet.entities.User;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 

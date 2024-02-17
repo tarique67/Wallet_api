@@ -2,14 +2,12 @@ package com.swiggy.wallet.entities;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
-@Getter
-@Setter
-@NoArgsConstructor
+@Data
 @Entity
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "users")
 public class User {
 
@@ -26,9 +24,9 @@ public class User {
     @OneToOne(cascade = CascadeType.ALL)
     private Wallet wallet;
 
-    public User(String userName, String password, Wallet wallet) {
+    public User(String userName, String password) {
         this.userName = userName;
         this.password = password;
-        this.wallet = wallet;
+        this.wallet = new Wallet();
     }
 }

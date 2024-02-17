@@ -8,8 +8,7 @@ import jakarta.persistence.Enumerated;
 import lombok.*;
 
 @Embeddable
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode

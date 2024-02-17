@@ -1,5 +1,6 @@
 package com.swiggy.wallet.services;
 
+import com.swiggy.wallet.entities.Money;
 import com.swiggy.wallet.entities.Wallet;
 import com.swiggy.wallet.exceptions.AuthenticationFailedException;
 import com.swiggy.wallet.requestModels.WalletRequestModel;
@@ -19,4 +20,6 @@ public interface WalletService {
     Wallet create(Wallet wallet);
 
     List<WalletResponseModel> getAllWallets();
+
+    void transact(Wallet wallet, Wallet wallet1, Money money) throws InsufficientBalanceException, InvalidAmountException;
 }

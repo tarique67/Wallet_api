@@ -1,9 +1,12 @@
 package com.swiggy.wallet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.swiggy.wallet.entities.Money;
 import com.swiggy.wallet.entities.User;
-import com.swiggy.wallet.entities.Wallet;
+import com.swiggy.wallet.enums.Currency;
 import com.swiggy.wallet.exceptions.UserAlreadyExistsException;
+import com.swiggy.wallet.exceptions.UserNotFoundException;
+import com.swiggy.wallet.requestModels.TransactionRequestModel;
 import com.swiggy.wallet.requestModels.UserRequestModel;
 import com.swiggy.wallet.services.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,12 +16,12 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -41,7 +44,7 @@ public class UserControllerTest {
     @Test
     void expectUserCreated() throws Exception {
         UserRequestModel userRequestModel = new UserRequestModel("testUser", "testPassword");
-        User user = new User("testUser", "testPassword", new Wallet());
+        User user = new User("testUser", "testPassword");
 
         when(userService.register(userRequestModel)).thenReturn(user);
 
@@ -65,4 +68,46 @@ public class UserControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    @WithMockUser(username = "user")
+    void expectUserDeleted() throws Exception {
+        String username = "user";
+        String successMessage = "User " + username + " deleted successfully.";
+
+        when(userService.delete()).thenReturn(successMessage);
+
+        mockMvc.perform(delete("/api/v1/users")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isAccepted())
+                .andExpect(content().string(successMessage));
+        verify(userService, times(1)).delete();
+    }
+
+    @Test
+    @WithMockUser(username = "userNotFound")
+    void expectUserNotFoundException() throws Exception {
+        String username = "userNotFound";
+        String errorMessage = "User "+username+" not be found.";
+
+        when(userService.delete()).thenThrow(new UserNotFoundException(errorMessage));
+
+        mockMvc.perform(delete("/api/v1/users")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+        verify(userService, times(1)).delete();
+    }
+
+    @Test
+    @WithMockUser(username = "sender")
+    void testTransactEndpoint() throws Exception {
+        TransactionRequestModel transactionRequestModel = new TransactionRequestModel("sender", new Money(100, Currency.INR));
+        String requestJson = objectMapper.writeValueAsString(transactionRequestModel);
+        when(userService.transact(transactionRequestModel)).thenReturn("Transaction Successful.");
+
+        mockMvc.perform(put("/api/v1/users/transact")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.message").value("Transaction Successful."));
+    }
 }

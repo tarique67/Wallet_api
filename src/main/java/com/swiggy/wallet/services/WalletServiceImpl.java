@@ -1,5 +1,6 @@
 package com.swiggy.wallet.services;
 
+import com.swiggy.wallet.entities.Money;
 import com.swiggy.wallet.entities.User;
 import com.swiggy.wallet.entities.Wallet;
 import com.swiggy.wallet.exceptions.AuthenticationFailedException;
@@ -57,5 +58,11 @@ public class WalletServiceImpl implements WalletService {
 
         userDao.save(user);
         return new WalletResponseModel(user.getWallet().getMoney());
+    }
+
+    @Override
+    public void transact(Wallet senderWallet, Wallet receiverWallet, Money money) throws InsufficientBalanceException, InvalidAmountException {
+        senderWallet.withdraw(money);
+        receiverWallet.deposit(money);
     }
 }
