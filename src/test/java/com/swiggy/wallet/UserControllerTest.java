@@ -98,7 +98,7 @@ public class UserControllerTest {
 
     @Test
     @WithMockUser(username = "sender")
-    void testTransactEndpoint() throws Exception {
+    void expectTransactionSuccessful() throws Exception {
         TransactionRequestModel transactionRequestModel = new TransactionRequestModel("sender", new Money(100, Currency.INR));
         String requestJson = objectMapper.writeValueAsString(transactionRequestModel);
         when(userService.transact(transactionRequestModel)).thenReturn(TRANSACTION_SUCCESSFUL);

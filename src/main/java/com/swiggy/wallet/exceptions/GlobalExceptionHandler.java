@@ -2,6 +2,8 @@ package com.swiggy.wallet.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
@@ -49,6 +51,20 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AuthenticationFailedException.class)
     public ResponseEntity<ErrorDetails> authFailedExceptionHandler(AuthenticationFailedException exception, WebRequest re){
+        ErrorDetails err = new ErrorDetails(LocalDateTime.now(), exception.getMessage(), re.getDescription(false));
+
+        return new ResponseEntity<ErrorDetails>(err, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<ErrorDetails> usernameNotFoundExceptionHandler(UsernameNotFoundException exception, WebRequest re){
+        ErrorDetails err = new ErrorDetails(LocalDateTime.now(), exception.getMessage(), re.getDescription(false));
+
+        return new ResponseEntity<ErrorDetails>(err, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorDetails> badCredentialsExceptionHandler(BadCredentialsException exception, WebRequest re){
         ErrorDetails err = new ErrorDetails(LocalDateTime.now(), exception.getMessage(), re.getDescription(false));
 
         return new ResponseEntity<ErrorDetails>(err, HttpStatus.BAD_REQUEST);

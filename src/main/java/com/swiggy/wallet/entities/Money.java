@@ -4,6 +4,7 @@ import com.swiggy.wallet.enums.Currency;
 import com.swiggy.wallet.exceptions.InsufficientBalanceException;
 import com.swiggy.wallet.exceptions.InvalidAmountException;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import lombok.*;
 
@@ -18,7 +19,7 @@ public class Money {
 
     private double amount;
 
-    @Enumerated
+    @Enumerated(EnumType.STRING)
     private Currency currency;
 
     public void add(Money money) throws InvalidAmountException {
