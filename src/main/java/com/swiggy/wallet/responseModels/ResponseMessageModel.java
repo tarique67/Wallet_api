@@ -9,12 +9,12 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class TransactionResponseModel {
+public class ResponseMessageModel {
 
     private String message;
     private LocalDateTime timeStamp = LocalDateTime.now();
 
-    public TransactionResponseModel(String message) {
+    public ResponseMessageModel(String message) {
         this.message = message;
     }
 }

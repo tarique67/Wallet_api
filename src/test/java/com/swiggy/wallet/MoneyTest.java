@@ -16,7 +16,7 @@ public class MoneyTest {
     }
 
     @Test
-    void expectMoneyAdded() throws InvalidAmountException {
+    void expectMoney100Added() throws InvalidAmountException {
         Money money = new Money(0,Currency.INR);
 
         money.add(new Money(100, Currency.INR));
@@ -25,7 +25,16 @@ public class MoneyTest {
     }
 
     @Test
-    void expectMoneyAddedForDifferentCurrency() throws InvalidAmountException {
+    void expectMoney50Added() throws InvalidAmountException {
+        Money money = new Money(0,Currency.INR);
+
+        money.add(new Money(50, Currency.INR));
+
+        assertEquals(new Money(50, Currency.INR), money);
+    }
+
+    @Test
+    void expectMoney100USDAdded() throws InvalidAmountException {
         Money money = new Money(0,Currency.INR);
 
         money.add(new Money(100, Currency.USD));
@@ -34,7 +43,16 @@ public class MoneyTest {
     }
 
     @Test
-    void expectMoneySubtracted() throws InvalidAmountException, InsufficientBalanceException {
+    void expectMoney100EURAdded() throws InvalidAmountException {
+        Money money = new Money(0,Currency.INR);
+
+        money.add(new Money(100, Currency.EUR));
+
+        assertEquals(new Money(8904, Currency.INR), money);
+    }
+
+    @Test
+    void expectMoney100INRSubtracted() throws InvalidAmountException, InsufficientBalanceException {
         Money money = new Money(100,Currency.INR);
 
         money.subtract(new Money(50, Currency.INR));
@@ -43,11 +61,21 @@ public class MoneyTest {
     }
 
     @Test
-    void expectMoneySubtractedForDifferentCurrency() throws InvalidAmountException, InsufficientBalanceException {
+    void expectMoney100USDSubtracted() throws InvalidAmountException, InsufficientBalanceException {
         Money money = new Money(0,Currency.INR);
         money.add(new Money(100, Currency.USD));
 
         money.subtract(new Money(100, Currency.USD));
+
+        assertEquals(new Money(0.0, Currency.INR), money);
+    }
+
+    @Test
+    void expectMoney100EURSubtracted() throws InvalidAmountException, InsufficientBalanceException {
+        Money money = new Money(0,Currency.INR);
+        money.add(new Money(100, Currency.EUR));
+
+        money.subtract(new Money(100, Currency.EUR));
 
         assertEquals(new Money(0.0, Currency.INR), money);
     }

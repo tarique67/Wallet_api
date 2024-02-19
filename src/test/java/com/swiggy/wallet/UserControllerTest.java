@@ -19,6 +19,8 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static com.swiggy.wallet.responseModels.ResponseMessage.TRANSACTION_SUCCESSFUL;
+import static com.swiggy.wallet.responseModels.ResponseMessage.USER_DELETED_SUCCESSFULLY;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -71,15 +73,12 @@ public class UserControllerTest {
     @Test
     @WithMockUser(username = "user")
     void expectUserDeleted() throws Exception {
-        String username = "user";
-        String successMessage = "User " + username + " deleted successfully.";
-
-        when(userService.delete()).thenReturn(successMessage);
+        when(userService.delete()).thenReturn(USER_DELETED_SUCCESSFULLY);
 
         mockMvc.perform(delete("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isAccepted())
-                .andExpect(content().string(successMessage));
+                .andExpect(jsonPath("$.message").value(USER_DELETED_SUCCESSFULLY));
         verify(userService, times(1)).delete();
     }
 
@@ -102,12 +101,12 @@ public class UserControllerTest {
     void testTransactEndpoint() throws Exception {
         TransactionRequestModel transactionRequestModel = new TransactionRequestModel("sender", new Money(100, Currency.INR));
         String requestJson = objectMapper.writeValueAsString(transactionRequestModel);
-        when(userService.transact(transactionRequestModel)).thenReturn("Transaction Successful.");
+        when(userService.transact(transactionRequestModel)).thenReturn(TRANSACTION_SUCCESSFUL);
 
         mockMvc.perform(put("/api/v1/users/transact")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isAccepted())
-                .andExpect(jsonPath("$.message").value("Transaction Successful."));
+                .andExpect(jsonPath("$.message").value(TRANSACTION_SUCCESSFUL));
     }
 }

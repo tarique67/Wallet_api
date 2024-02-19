@@ -24,6 +24,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
+import static com.swiggy.wallet.responseModels.ResponseMessage.USER_DELETED_SUCCESSFULLY;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -89,7 +90,6 @@ public class UserServiceTest {
         String username = "testUser";
         User user = new User(username, "password");
         when(userDao.findByUserName(username)).thenReturn(Optional.of(user));
-        String expectedResult = "User " + username + " deleted successfully.";
         when(authentication.getName()).thenReturn(username);
         when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
@@ -98,7 +98,7 @@ public class UserServiceTest {
 
         verify(userDao, times(1)).findByUserName(username);
         verify(userDao, times(1)).delete(user);
-        assertEquals(expectedResult, result);
+        assertEquals(USER_DELETED_SUCCESSFULLY, result);
     }
 
     @Test

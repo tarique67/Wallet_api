@@ -13,9 +13,9 @@ import java.util.List;
 
 public interface WalletService {
 
-    WalletResponseModel deposit(String walletId, WalletRequestModel requestModel) throws InvalidAmountException, AuthenticationFailedException;
+    WalletResponseModel deposit(String username, WalletRequestModel requestModel) throws InvalidAmountException, AuthenticationFailedException;
 
-    WalletResponseModel withdraw(String walletId, WalletRequestModel requestModel) throws InsufficientBalanceException, InvalidAmountException, AuthenticationFailedException;
+    WalletResponseModel withdraw(String username, WalletRequestModel requestModel) throws InsufficientBalanceException, InvalidAmountException, AuthenticationFailedException;
 
     Wallet create(Wallet wallet);
 

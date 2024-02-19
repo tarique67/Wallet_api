@@ -63,6 +63,19 @@ public class WalletControllerTest {
     }
 
     @Test
+    void expectUnauthorizedOnDeposit() throws Exception {
+        WalletRequestModel requestModel = new WalletRequestModel(new Money(100, Currency.INR));
+        WalletResponseModel responseModel = new WalletResponseModel(new Money(100, Currency.INR));
+        when(walletService.deposit(anyString(), any())).thenReturn(responseModel);
+
+        mockMvc.perform(put("/api/v1/wallets/deposit")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestModel)))
+                .andExpect(status().isUnauthorized());
+        verify(walletService, never()).deposit(anyString(),any());
+    }
+
+    @Test
     @WithMockUser(username = "user")
     void expectWithdrawalSuccessfully() throws Exception {
         WalletRequestModel requestModel = new WalletRequestModel(new Money(50, Currency.INR));
@@ -76,6 +89,18 @@ public class WalletControllerTest {
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.money.amount").value("50.0"));
         verify(walletService, times(1)).withdraw(anyString(), any(WalletRequestModel.class));
+    }
+
+    @Test
+    void expectUnauthorizedOnWithdrawal() throws Exception {
+        WalletRequestModel requestModel = new WalletRequestModel(new Money(50, Currency.INR));
+        String requestBody = objectMapper.writeValueAsString(requestModel);
+
+        mockMvc.perform(put("/api/v1/wallets/withdraw")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isUnauthorized());
+        verify(walletService, never()).withdraw(anyString(), any(WalletRequestModel.class));
     }
 
     @Test
@@ -95,4 +120,15 @@ public class WalletControllerTest {
         assertEquals(2, walletResponse.length);
     }
 
+    @Test
+    void expectUnauthorizedForWalletList() throws Exception {
+        WalletResponseModel firstWallet = new WalletResponseModel();
+        WalletResponseModel secondWallet = new WalletResponseModel();
+        when(walletService.getAllWallets()).thenReturn(Arrays.asList(firstWallet, secondWallet));
+
+        mockMvc.perform(get("/api/v1/wallets")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+        verify(walletService, never()).getAllWallets();
+    }
 }

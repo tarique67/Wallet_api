@@ -7,7 +7,7 @@ import com.swiggy.wallet.exceptions.UserAlreadyExistsException;
 import com.swiggy.wallet.exceptions.UserNotFoundException;
 import com.swiggy.wallet.requestModels.TransactionRequestModel;
 import com.swiggy.wallet.requestModels.UserRequestModel;
-import com.swiggy.wallet.responseModels.TransactionResponseModel;
+import com.swiggy.wallet.responseModels.ResponseMessageModel;
 import com.swiggy.wallet.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -28,14 +28,14 @@ public class UserController {
     }
 
     @DeleteMapping("")
-    public ResponseEntity<String> deleteUser() throws UserNotFoundException {
+    public ResponseEntity<ResponseMessageModel> deleteUser() throws UserNotFoundException {
         String response = userService.delete();
-        return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
+        return new ResponseEntity<>(new ResponseMessageModel(response), HttpStatus.ACCEPTED);
     }
 
     @PutMapping("/transact")
-    public ResponseEntity<TransactionResponseModel> transact(@RequestBody TransactionRequestModel transactionRequestModel) throws InsufficientBalanceException, InvalidAmountException {
+    public ResponseEntity<ResponseMessageModel> transact(@RequestBody TransactionRequestModel transactionRequestModel) throws InsufficientBalanceException, InvalidAmountException {
         String response = userService.transact(transactionRequestModel);
-        return new ResponseEntity<>(new TransactionResponseModel(response), HttpStatus.ACCEPTED);
+        return new ResponseEntity<>(new ResponseMessageModel(response), HttpStatus.ACCEPTED);
     }
 }

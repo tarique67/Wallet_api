@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+import static com.swiggy.wallet.responseModels.ResponseMessage.*;
+
 @Service
 public class UserServiceImpl implements UserService{
 
@@ -31,7 +33,7 @@ public class UserServiceImpl implements UserService{
     @Override
     public User register(UserRequestModel user) throws UserAlreadyExistsException {
         if(userDao.findByUserName(user.getUserName()).isPresent())
-            throw new UserAlreadyExistsException("Username taken. Please try with another username.");
+            throw new UserAlreadyExistsException(USERNAME_ALREADY_TAKEN);
         User userToSave = new User(user.getUserName(), passwordEncoder.encode(user.getPassword()));
         return userDao.save(userToSave);
     }
@@ -44,7 +46,7 @@ public class UserServiceImpl implements UserService{
             throw new UserNotFoundException("User could not be found.");
 
         userDao.delete(userToDelete.get());
-        return "User " + username + " deleted successfully.";
+        return USER_DELETED_SUCCESSFULLY;
     }
 
     @Override
@@ -58,6 +60,6 @@ public class UserServiceImpl implements UserService{
         userDao.save(sender);
         userDao.save(receiver);
 
-        return "Transaction Successful.";
+        return TRANSACTION_SUCCESSFUL;
     }
 }

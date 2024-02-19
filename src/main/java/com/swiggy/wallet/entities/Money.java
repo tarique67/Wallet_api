@@ -7,6 +7,8 @@ import jakarta.persistence.Embeddable;
 import jakarta.persistence.Enumerated;
 import lombok.*;
 
+import static com.swiggy.wallet.responseModels.ResponseMessage.*;
+
 @Embeddable
 @Data
 @AllArgsConstructor
@@ -21,17 +23,17 @@ public class Money {
 
     public void add(Money money) throws InvalidAmountException {
         if((money.amount * money.currency.getConversionFactor()) <= 0)
-            throw new InvalidAmountException("Amount to deposit should be greater than 0.");
+            throw new InvalidAmountException(DEPOSIT_SHOULD_BE_GREATER_THAN_0);
 
         this.amount += money.amount * money.currency.getConversionFactor();
     }
 
     public void subtract(Money money) throws InvalidAmountException, InsufficientBalanceException {
         if((money.amount * money.currency.getConversionFactor()) > this.amount)
-            throw new InsufficientBalanceException("Insufficient balance.");
+            throw new InsufficientBalanceException(INSUFFICIENT_BALANCE_EXCEPTION);
 
         if((money.amount * money.currency.getConversionFactor()) <= 0)
-            throw new InvalidAmountException("Withdrawal amount should be greater than 0.");
+            throw new InvalidAmountException(WITHDRAWAL_SHOULD_BE_GREATER_THAN_0);
 
         this.amount -= money.amount * money.currency.getConversionFactor();
     }

@@ -48,7 +48,7 @@ public class WalletTest {
     }
 
     @Test
-    void expectExceptionForInsufficientBalanceWithdrawn() throws InsufficientBalanceException, InvalidAmountException {
+    void expectExceptionForInsufficientBalanceWhenWithdrawing() throws InsufficientBalanceException, InvalidAmountException {
         Wallet wallet = new Wallet();
         assertThrows(InsufficientBalanceException.class, ()-> wallet.withdraw(new Money(100, Currency.INR)));
     }
