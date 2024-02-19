@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Controller
@@ -30,7 +31,9 @@ public class TransactionController {
     }
 
     @GetMapping
-    public ResponseEntity<List<TransactionsResponseModel>> allTransactions(){
+    public ResponseEntity<List<TransactionsResponseModel>> allTransactions(@RequestParam(required = false) LocalDate startDate, @RequestParam(required = false) LocalDate endDate){
+        if(startDate != null && endDate != null)
+            return new ResponseEntity<>(transactionService.allTransactionsDateBased(startDate,endDate), HttpStatus.OK);
         return new ResponseEntity<>(transactionService.allTransactions(), HttpStatus.OK);
     }
 }

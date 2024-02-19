@@ -14,6 +14,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,7 +39,18 @@ public class TransactionServicesImpl implements TransactionService{
         User user = userDao.findByUserName(username).orElseThrow(()-> new UsernameNotFoundException("Username not found."));
 
         List<Transaction> transactions = transactionDao.findTransactionsOfUser(user);
-        List<TransactionsResponseModel> response = transactions.stream().map((transaction -> new TransactionsResponseModel(transaction.getSender().getUserName(), transaction.getReceiver().getUserName(), transaction.getMoney()))).collect(Collectors.toList());
+        List<TransactionsResponseModel> response = transactions.stream().map((transaction -> new TransactionsResponseModel(transaction.getTimestamp(), transaction.getSender().getUserName(), transaction.getReceiver().getUserName(), transaction.getMoney()))).collect(Collectors.toList());
+
+        return response;
+    }
+
+    @Override
+    public List<TransactionsResponseModel> allTransactionsDateBased(LocalDate startDate, LocalDate endDate) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userDao.findByUserName(username).orElseThrow(()-> new UsernameNotFoundException("Username not found."));
+
+        List<Transaction> transactions = transactionDao.findTransactionsOfUserDateBased(user,startDate.atTime(0,0,0), endDate.atTime(23,59,59));
+        List<TransactionsResponseModel> response = transactions.stream().map((transaction -> new TransactionsResponseModel(transaction.getTimestamp(), transaction.getSender().getUserName(), transaction.getReceiver().getUserName(), transaction.getMoney()))).collect(Collectors.toList());
 
         return response;
     }
@@ -53,7 +66,7 @@ public class TransactionServicesImpl implements TransactionService{
         userDao.save(sender);
         userDao.save(receiver);
 
-        Transaction transaction = new Transaction(requestModel.getMoney(), sender, receiver);
+        Transaction transaction = new Transaction(LocalDateTime.now(),requestModel.getMoney(), sender, receiver);
         transactionDao.save(transaction);
 
         return TRANSACTION_SUCCESSFUL;

@@ -4,10 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swiggy.wallet.entities.Money;
 import com.swiggy.wallet.enums.Currency;
 import com.swiggy.wallet.requestModels.TransactionRequestModel;
-import com.swiggy.wallet.responseModels.ResponseMessage;
 import com.swiggy.wallet.responseModels.TransactionsResponseModel;
 import com.swiggy.wallet.services.TransactionService;
-import com.swiggy.wallet.services.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,13 +16,15 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.List;
 
 import static com.swiggy.wallet.responseModels.ResponseMessage.TRANSACTION_SUCCESSFUL;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -63,7 +63,7 @@ public class TransactionControllerTest {
     void expectAllTransactionsOfUser() throws Exception {
         TransactionRequestModel transactionRequestModel = new TransactionRequestModel("receiver", new Money(100, Currency.INR));
         String requestJson = objectMapper.writeValueAsString(transactionRequestModel);
-        when(transactionService.allTransactions()).thenReturn(Arrays.asList(new TransactionsResponseModel("sender1","receiver1", new Money(100, Currency.INR))));
+        when(transactionService.allTransactions()).thenReturn(Arrays.asList(new TransactionsResponseModel(LocalDateTime.now(),"sender1","receiver1", new Money(100, Currency.INR))));
 
         mockMvc.perform(get("/api/v1/transactions")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -73,15 +73,53 @@ public class TransactionControllerTest {
     }
 
     @Test
-    void expectUnauthorized() throws Exception {
+    void expectUnauthorizedForAllTransactions() throws Exception {
         TransactionRequestModel transactionRequestModel = new TransactionRequestModel("receiver", new Money(100, Currency.INR));
         String requestJson = objectMapper.writeValueAsString(transactionRequestModel);
-        when(transactionService.allTransactions()).thenReturn(Arrays.asList(new TransactionsResponseModel("sender1","receiver1", new Money(100, Currency.INR))));
+        when(transactionService.allTransactions()).thenReturn(Arrays.asList(new TransactionsResponseModel(LocalDateTime.now()   ,"sender1","receiver1", new Money(100, Currency.INR))));
 
         mockMvc.perform(get("/api/v1/transactions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isUnauthorized());
         verify(transactionService, times(0)).allTransactions();
+    }
+
+    @Test
+    @WithMockUser(username = "sender")
+    public void expectAllTransactionsDateBased() throws Exception {
+        LocalDate startDate = LocalDate.of(2022, 1, 1);
+        LocalDate endDate = LocalDate.of(2022, 1, 31);
+        List<TransactionsResponseModel> mockResponse = Arrays.asList(
+                new TransactionsResponseModel(LocalDateTime.now(),"sender", "receiver1", new Money(100, Currency.INR)),
+                new TransactionsResponseModel(LocalDateTime.now(),"sender", "receiver2", new Money(200, Currency.INR))
+        );
+        when(transactionService.allTransactionsDateBased(startDate, endDate)).thenReturn(mockResponse);
+
+        mockMvc.perform(get("/api/v1/transactions")
+                        .param("startDate", startDate.toString())
+                        .param("endDate", endDate.toString())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[0].sender").value("sender"))
+                .andExpect(jsonPath("$[0].receiver").value("receiver1"))
+                .andExpect(jsonPath("$[0].money.amount").value(100))
+                .andExpect(jsonPath("$[1].sender").value("sender"))
+                .andExpect(jsonPath("$[1].receiver").value("receiver2"))
+                .andExpect(jsonPath("$[1].money.amount").value(200));
+    }
+
+    @Test
+    void expectUnauthorizedForAllTransactionsDateBased() throws Exception {
+        TransactionRequestModel transactionRequestModel = new TransactionRequestModel("receiver", new Money(100, Currency.INR));
+        String requestJson = objectMapper.writeValueAsString(transactionRequestModel);
+        when(transactionService.allTransactionsDateBased(LocalDate.now(), LocalDate.now())).thenReturn(Arrays.asList(new TransactionsResponseModel(LocalDateTime.now()   ,"sender1","receiver1", new Money(100, Currency.INR))));
+
+        mockMvc.perform(get("/api/v1/transactions/filter")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().isUnauthorized());
+        verify(transactionService, times(0)).allTransactionsDateBased(LocalDate.now(), LocalDate.now());
     }
 }

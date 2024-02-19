@@ -23,6 +23,9 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -103,9 +106,9 @@ public class TransactionServiceTest {
         when(authentication.getName()).thenReturn("sender");
         when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
-        Transaction transaction1 = new Transaction(new Money(100, Currency.INR), sender, receiver);
-        Transaction transaction2 = new Transaction(new Money(200, Currency.INR), sender, receiver);
-        List<Transaction> transactions = Arrays.asList(transaction1, transaction2);
+        Transaction firstTransaction = new Transaction(LocalDateTime.now(), new Money(100, Currency.INR), sender, receiver);
+        Transaction secondTransaction = new Transaction(LocalDateTime.now(),new Money(200, Currency.INR), sender, receiver);
+        List<Transaction> transactions = Arrays.asList(firstTransaction, secondTransaction);
         when(userDao.findByUserName("sender")).thenReturn(Optional.of(sender));
         when(transactionDao.findTransactionsOfUser(sender)).thenReturn(transactions);
 
@@ -114,5 +117,55 @@ public class TransactionServiceTest {
         assertEquals(2, response.size());
         verify(userDao, times(1)).findByUserName("sender");
         verify(transactionDao, times(1)).findTransactionsOfUser(sender);
+    }
+
+    @Test
+    void expectAllTransactionsDateBased() {
+        User sender = new User("sender", "senderPassword");
+        User receiver = new User("receiver", "receiverPassword");
+        LocalDateTime startDate = LocalDate.of(2022, 1, 1).atStartOfDay();
+        LocalDateTime endDate = LocalDate.of(2022, 1, 31).atTime(23, 59, 59);
+        Transaction transaction = new Transaction(LocalDateTime.now(), new Money(100, Currency.INR) , sender, receiver);
+        List<Transaction> transactions = new ArrayList<>();
+        transactions.add(transaction);
+        when(authentication.getName()).thenReturn("sender");
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        when(userDao.findByUserName("sender")).thenReturn(Optional.of(sender));
+        when(transactionDao.findTransactionsOfUserDateBased(sender, startDate, endDate)).thenReturn(transactions);
+
+        List<TransactionsResponseModel> response = transactionService.allTransactionsDateBased(startDate.toLocalDate(), endDate.toLocalDate());
+
+        assertEquals(1, response.size());
+        verify(transactionDao, times(1)).findTransactionsOfUserDateBased(sender,startDate,endDate);
+    }
+
+    @Test
+    void expectAllTransactionsDateBasedDifferentFromAllTransaction() {
+        User sender = new User("sender", "senderPassword");
+        User receiver = new User("receiver", "receiverPassword");
+        LocalDateTime startDate = LocalDate.of(2022, 1, 1).atStartOfDay();
+        LocalDateTime endDate = LocalDate.of(2022, 1, 31).atTime(23, 59, 59);
+        Transaction firstTransaction = new Transaction(LocalDateTime.now(), new Money(100, Currency.INR) , sender, receiver);
+        Transaction secondTransaction = new Transaction(LocalDateTime.now().minusDays(2), new Money(100, Currency.INR) , sender, receiver);
+        List<Transaction> allTransactions = new ArrayList<>();
+        allTransactions.add(firstTransaction);
+        allTransactions.add(secondTransaction);
+        List<Transaction> transactionsFiltered = new ArrayList<>();
+        transactionsFiltered.add(firstTransaction);
+        when(authentication.getName()).thenReturn("sender");
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        when(userDao.findByUserName("sender")).thenReturn(Optional.of(sender));
+        when(transactionDao.findTransactionsOfUserDateBased(sender, startDate, endDate)).thenReturn(transactionsFiltered);
+        when(transactionDao.findTransactionsOfUser(sender)).thenReturn(allTransactions);
+
+        List<TransactionsResponseModel> responseDateBased = transactionService.allTransactionsDateBased(startDate.toLocalDate(), endDate.toLocalDate());
+        List<TransactionsResponseModel> responseWithoutDate = transactionService.allTransactions();
+
+        assertEquals(1, responseDateBased.size());
+        assertEquals(2, responseWithoutDate.size());
+        verify(transactionDao, times(1)).findTransactionsOfUser(sender);
+        verify(transactionDao, times(1)).findTransactionsOfUserDateBased(sender,startDate, endDate);
     }
 }
