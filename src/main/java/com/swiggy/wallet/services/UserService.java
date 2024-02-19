@@ -14,5 +14,4 @@ public interface UserService {
 
     String delete() throws UserNotFoundException;
 
-    String transact(TransactionRequestModel requestModel) throws InsufficientBalanceException, InvalidAmountException;
 }

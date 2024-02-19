@@ -114,21 +114,4 @@ public class UserServiceTest {
         verify(userDao, never()).delete(any());
     }
 
-    @Test
-    void expectTransactionSuccessful() throws InsufficientBalanceException, InvalidAmountException {
-        User sender = new User("sender", "senderPassword");
-        User receiver = new User("receiver", "receiverPassword");
-        TransactionRequestModel requestModel = new TransactionRequestModel("receiver", new Money(100.0, Currency.INR));
-        when(authentication.getName()).thenReturn("sender");
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        SecurityContextHolder.setContext(securityContext);
-        when(userDao.findByUserName("sender")).thenReturn(Optional.of(sender));
-        when(userDao.findByUserName("receiver")).thenReturn(Optional.of(receiver));
-
-        userService.transact(requestModel);
-
-        verify(walletService, times(1)).transact(sender.getWallet(), receiver.getWallet(), requestModel.getMoney());
-        verify(userDao, times(1)).save(sender);
-        verify(userDao, times(1)).save(receiver);
-    }
 }

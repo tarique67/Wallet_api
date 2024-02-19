@@ -49,17 +49,4 @@ public class UserServiceImpl implements UserService{
         return USER_DELETED_SUCCESSFULLY;
     }
 
-    @Override
-    public String transact(TransactionRequestModel requestModel) throws InsufficientBalanceException, InvalidAmountException {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User sender = userDao.findByUserName(username).orElseThrow(() -> new UsernameNotFoundException("User "+ username + " not found."));
-        User receiver = userDao.findByUserName(requestModel.getReceiverName()).orElseThrow(() -> new UsernameNotFoundException("User "+ requestModel.getReceiverName() + " not found."));
-
-        walletService.transact(sender.getWallet(), receiver.getWallet(), requestModel.getMoney());
-
-        userDao.save(sender);
-        userDao.save(receiver);
-
-        return TRANSACTION_SUCCESSFUL;
-    }
 }

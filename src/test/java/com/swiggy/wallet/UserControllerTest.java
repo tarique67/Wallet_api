@@ -96,17 +96,4 @@ public class UserControllerTest {
         verify(userService, times(1)).delete();
     }
 
-    @Test
-    @WithMockUser(username = "sender")
-    void expectTransactionSuccessful() throws Exception {
-        TransactionRequestModel transactionRequestModel = new TransactionRequestModel("sender", new Money(100, Currency.INR));
-        String requestJson = objectMapper.writeValueAsString(transactionRequestModel);
-        when(userService.transact(transactionRequestModel)).thenReturn(TRANSACTION_SUCCESSFUL);
-
-        mockMvc.perform(put("/api/v1/users/transact")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestJson))
-                .andExpect(status().isAccepted())
-                .andExpect(jsonPath("$.message").value(TRANSACTION_SUCCESSFUL));
-    }
 }
