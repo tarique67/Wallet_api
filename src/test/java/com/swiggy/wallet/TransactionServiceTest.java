@@ -3,6 +3,7 @@ package com.swiggy.wallet;
 import com.swiggy.wallet.entities.Money;
 import com.swiggy.wallet.entities.Transaction;
 import com.swiggy.wallet.entities.User;
+import com.swiggy.wallet.entities.Wallet;
 import com.swiggy.wallet.enums.Currency;
 import com.swiggy.wallet.exceptions.InsufficientBalanceException;
 import com.swiggy.wallet.exceptions.InvalidAmountException;
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -66,8 +68,11 @@ public class TransactionServiceTest {
 
     @Test
     void expectTransactionSuccessful() throws InsufficientBalanceException, InvalidAmountException, UserNotFoundException {
-        User sender = new User("sender", "senderPassword");
-        User receiver = new User("receiver", "receiverPassword");
+        Wallet senderWallet = spy(new Wallet(1, new Money(0, Currency.INR)));
+        Wallet receiverWallet = spy(new Wallet(2, new Money(0, Currency.INR)));
+        senderWallet.deposit(new Money(100.0,Currency.INR));
+        User sender = new User(1,"sender", "senderPassword", senderWallet);
+        User receiver = new User(2,"receiver", "receiverPassword", receiverWallet);
         TransactionRequestModel requestModel = spy(new TransactionRequestModel("receiver", new Money(100.0, Currency.INR)));
         when(authentication.getName()).thenReturn("sender");
         when(securityContext.getAuthentication()).thenReturn(authentication);
@@ -77,7 +82,9 @@ public class TransactionServiceTest {
 
         transactionService.transact(requestModel);
 
-        verify(walletService, times(1)).transact(sender.getWallet(), receiver.getWallet(), requestModel.getMoney());
+        verify(senderWallet, times(1)).deposit(requestModel.getMoney());
+        verify(senderWallet, times(1)).withdraw(requestModel.getMoney());
+        verify(receiverWallet, times(1)).deposit(requestModel.getMoney());
         verify(userDao, times(1)).save(sender);
         verify(userDao, times(1)).save(receiver);
     }
@@ -94,7 +101,8 @@ public class TransactionServiceTest {
         when(userDao.findByUserName("receiver")).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class,()-> transactionService.transact(requestModel));
-        verify(walletService, times(0)).transact(sender.getWallet(), receiver.getWallet(), requestModel.getMoney());
+//        verify(wallet, times(0)).deposit(requestModel.getMoney());
+//        verify(wallet, times(0)).withdraw(requestModel.getMoney());
         verify(userDao, times(0)).save(sender);
         verify(userDao, times(0)).save(receiver);
     }

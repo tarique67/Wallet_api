@@ -69,9 +69,4 @@ public class WalletServiceImpl implements WalletService {
         return new WalletResponseModel(user.getWallet().getMoney());
     }
 
-    @Override
-    public void transact(Wallet senderWallet, Wallet receiverWallet, Money money) throws InsufficientBalanceException, InvalidAmountException {
-        senderWallet.withdraw(money);
-        receiverWallet.deposit(money);
-    }
 }

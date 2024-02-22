@@ -22,5 +22,4 @@ public interface WalletService {
 
     List<WalletResponseModel> getAllWallets();
 
-    void transact(Wallet wallet, Wallet wallet1, Money money) throws InsufficientBalanceException, InvalidAmountException;
 }

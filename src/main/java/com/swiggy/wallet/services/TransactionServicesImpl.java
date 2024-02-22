@@ -61,11 +61,11 @@ public class TransactionServicesImpl implements TransactionService{
         User sender = userDao.findByUserName(username).orElseThrow(() -> new UsernameNotFoundException("User "+ username + " not found."));
         User receiver = userDao.findByUserName(requestModel.getReceiverName()).orElseThrow(() -> new UserNotFoundException("User "+ requestModel.getReceiverName() + " not found."));
 
-        walletService.transact(sender.getWallet(), receiver.getWallet(), requestModel.getMoney());
+        sender.getWallet().withdraw(requestModel.getMoney());
+        receiver.getWallet().deposit(requestModel.getMoney());
 
         userDao.save(sender);
         userDao.save(receiver);
-
         Transaction transaction = new Transaction(LocalDateTime.now(),requestModel.getMoney(), sender, receiver);
         transactionDao.save(transaction);
 
