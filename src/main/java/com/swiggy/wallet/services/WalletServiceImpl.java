@@ -4,6 +4,7 @@ import com.swiggy.wallet.entities.Money;
 import com.swiggy.wallet.entities.User;
 import com.swiggy.wallet.entities.Wallet;
 import com.swiggy.wallet.exceptions.AuthenticationFailedException;
+import com.swiggy.wallet.exceptions.WalletNotFoundException;
 import com.swiggy.wallet.repository.UserDAO;
 import com.swiggy.wallet.requestModels.WalletRequestModel;
 import com.swiggy.wallet.responseModels.WalletResponseModel;
@@ -15,6 +16,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.swiggy.wallet.responseModels.ResponseMessage.WALLET_ID_DOES_NOT_MATCH;
 
 @Service
 public class WalletServiceImpl implements WalletService {
@@ -41,22 +44,28 @@ public class WalletServiceImpl implements WalletService {
     }
 
     @Override
-    public WalletResponseModel deposit(String username, WalletRequestModel requestModel) throws InvalidAmountException, AuthenticationFailedException {
+    public WalletResponseModel deposit(int walletId, String username, WalletRequestModel requestModel) throws InvalidAmountException, AuthenticationFailedException, WalletNotFoundException {
         User user = userDao.findByUserName(username).orElseThrow(() -> new AuthenticationFailedException("Username or password does not match."));
+        Wallet wallet = walletDao.findById(walletId).orElseThrow(() -> new WalletNotFoundException(WALLET_ID_DOES_NOT_MATCH));
+        if(user.getWallet().getWalletId() != walletId)
+            throw new AuthenticationFailedException(WALLET_ID_DOES_NOT_MATCH);
 
-        user.getWallet().deposit(requestModel.getMoney());
+        wallet.deposit(requestModel.getMoney());
 
-        userDao.save(user);
+        walletDao.save(wallet);
         return new WalletResponseModel(user.getWallet().getMoney());
     }
 
     @Override
-    public WalletResponseModel withdraw(String username, WalletRequestModel requestModel) throws InsufficientBalanceException, InvalidAmountException, AuthenticationFailedException {
+    public WalletResponseModel withdraw(int walletId, String username, WalletRequestModel requestModel) throws InsufficientBalanceException, InvalidAmountException, AuthenticationFailedException, WalletNotFoundException {
         User user = userDao.findByUserName(username).orElseThrow(() -> new AuthenticationFailedException("Username or password does not match."));
+        Wallet wallet = walletDao.findById(walletId).orElseThrow(() -> new WalletNotFoundException(WALLET_ID_DOES_NOT_MATCH));
+        if(user.getWallet().getWalletId() != walletId)
+            throw new AuthenticationFailedException(WALLET_ID_DOES_NOT_MATCH);
 
-        user.getWallet().withdraw(requestModel.getMoney());
+        wallet.withdraw(requestModel.getMoney());
 
-        userDao.save(user);
+        walletDao.save(wallet);
         return new WalletResponseModel(user.getWallet().getMoney());
     }
 

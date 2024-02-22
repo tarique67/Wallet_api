@@ -116,7 +116,7 @@ public class TransactionControllerTest {
         String requestJson = objectMapper.writeValueAsString(transactionRequestModel);
         when(transactionService.allTransactionsDateBased(LocalDate.now(), LocalDate.now())).thenReturn(Arrays.asList(new TransactionsResponseModel(LocalDateTime.now()   ,"sender1","receiver1", new Money(100, Currency.INR))));
 
-        mockMvc.perform(get("/api/v1/transactions/filter")
+        mockMvc.perform(get("/api/v1/transactions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isUnauthorized());

@@ -7,7 +7,6 @@ import com.swiggy.wallet.exceptions.AuthenticationFailedException;
 import com.swiggy.wallet.exceptions.InsufficientBalanceException;
 import com.swiggy.wallet.exceptions.InvalidAmountException;
 import com.swiggy.wallet.repository.UserDAO;
-import com.swiggy.wallet.requestModels.TransactionRequestModel;
 import com.swiggy.wallet.requestModels.WalletRequestModel;
 import com.swiggy.wallet.responseModels.WalletResponseModel;
 import com.swiggy.wallet.enums.Currency;
@@ -60,17 +59,17 @@ public class WalletServiceTest {
 
     @Test
     void expectAmountDepositedWithValidAmount() throws Exception {
-        User user = new User();
-        user.setUserName("testUser");
-        user.setWallet(new Wallet());
+        User user = spy(new User("testUser", "testPassword"));
+        Wallet wallet = new Wallet(1, new Money());
         when(userDao.findByUserName("testUser")).thenReturn(Optional.of(user));
-        when(userDao.save(any())).thenReturn(user);
+        when(walletDao.findById(1)).thenReturn(Optional.of(wallet));
+        when(user.getWallet()).thenReturn(wallet);
         WalletRequestModel requestModel = new WalletRequestModel(new Money(100,Currency.INR));
 
-        walletService.deposit("testUser", requestModel);
+        walletService.deposit(1, "testUser", requestModel);
 
-        verify(userDao, times(1)).findByUserName("testUser");
-        verify(userDao, times(1)).save(any());
+        verify(walletDao, times(1)).findById(1);
+        verify(walletDao, times(1)).save(wallet);
     }
 
     @Test
@@ -79,35 +78,38 @@ public class WalletServiceTest {
         WalletRequestModel requestModel = new WalletRequestModel(new Money(50, Currency.INR));
 
         assertThrows(AuthenticationFailedException.class, () -> {
-            walletService.deposit("nonExistentUser", requestModel);
+            walletService.deposit(anyInt(), "nonExistentUser", requestModel);
         });
     }
 
     @Test
     void expectAmountWithdrawn() throws Exception {
-        Wallet wallet = new Wallet();
+        Wallet wallet = new Wallet(1, new Money());
         wallet.deposit(new Money(100, Currency.INR));
-        User user = new User(1,"testUser", "testPassword", wallet);
-
+        User user = spy(new User(1,"testUser", "testPassword", wallet));
         when(userDao.findByUserName("testUser")).thenReturn(Optional.of(user));
-        when(userDao.save(any())).thenReturn(user);
+        when(walletDao.findById(1)).thenReturn(Optional.of(wallet));
+        when(user.getWallet()).thenReturn(wallet);
         WalletRequestModel requestModel = new WalletRequestModel(new Money(50, Currency.INR));
 
-        WalletResponseModel returnedWallet = walletService.withdraw("testUser", requestModel);
+        WalletResponseModel returnedWallet = walletService.withdraw(1, "testUser", requestModel);
 
-        assertEquals(50, wallet.getMoney().getAmount());
-        verify(userDao, times(1)).findByUserName("testUser");
-        verify(userDao, times(1)).save(any());
+        assertEquals(50, returnedWallet.getMoney().getAmount());
+        verify(walletDao, times(1)).findById(1);
+        verify(walletDao, times(1)).save(any());
     }
 
     @Test
     void expectInsufficientBalanceException() throws AuthenticationFailedException, InvalidAmountException {
-        User user = new User("testUser", "testPassword");
+        Wallet wallet = new Wallet(1,new Money());
+        when(walletDao.findById(1)).thenReturn(Optional.of(wallet));
+        User user = spy(new User("testUser", "testPassword"));
         when(userDao.findByUserName("testUser")).thenReturn(Optional.of(user));
+        when(user.getWallet()).thenReturn(wallet);
         WalletRequestModel requestModel = new WalletRequestModel(new Money(50, Currency.INR));
 
         assertThrows(InsufficientBalanceException.class, () -> {
-            walletService.withdraw("testUser", requestModel);
+            walletService.withdraw(1, "testUser", requestModel);
         });
         verify(userDao, never()).save(any());
         verify(walletDao,never()).save(any());
@@ -142,7 +144,7 @@ public class WalletServiceTest {
         WalletRequestModel requestModel = new WalletRequestModel(new Money(50, Currency.INR));
 
         assertThrows(AuthenticationFailedException.class, () -> {
-            walletService.withdraw("nonExistentUser", requestModel);
+            walletService.withdraw(anyInt(), "nonExistentUser", requestModel);
         });
         verify(userDao, never()).save(any());
     }
