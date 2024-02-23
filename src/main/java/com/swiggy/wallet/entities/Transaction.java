@@ -24,13 +24,19 @@ public class Transaction {
     @ManyToOne(cascade = CascadeType.ALL)
     private User sender;
 
+    private int senderWalletId;
+
     @ManyToOne(cascade = CascadeType.ALL)
     private User receiver;
 
-    public Transaction(LocalDateTime timestamp, Money money, User sender, User receiver) {
+    private int receiverWalletId;
+
+    public Transaction(LocalDateTime timestamp, Money money, User sender, int senderWalletId, User receiver, int receiverWalletId) {
         this.timestamp = timestamp;
         this.money = money;
         this.sender = sender;
+        this.senderWalletId = senderWalletId;
         this.receiver = receiver;
+        this.receiverWalletId = receiverWalletId;
     }
 }

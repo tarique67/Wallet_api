@@ -1,11 +1,8 @@
 package com.swiggy.wallet.services;
 
 import com.swiggy.wallet.entities.User;
-import com.swiggy.wallet.exceptions.InsufficientBalanceException;
-import com.swiggy.wallet.exceptions.InvalidAmountException;
 import com.swiggy.wallet.exceptions.UserAlreadyExistsException;
 import com.swiggy.wallet.exceptions.UserNotFoundException;
-import com.swiggy.wallet.requestModels.TransactionRequestModel;
 import com.swiggy.wallet.requestModels.UserRequestModel;
 
 public interface UserService {
@@ -14,4 +11,5 @@ public interface UserService {
 
     String delete() throws UserNotFoundException;
 
+    User addWallet(int userId) throws UserNotFoundException;
 }

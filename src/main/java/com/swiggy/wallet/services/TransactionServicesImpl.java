@@ -2,11 +2,11 @@ package com.swiggy.wallet.services;
 
 import com.swiggy.wallet.entities.Transaction;
 import com.swiggy.wallet.entities.User;
-import com.swiggy.wallet.exceptions.InsufficientBalanceException;
-import com.swiggy.wallet.exceptions.InvalidAmountException;
-import com.swiggy.wallet.exceptions.UserNotFoundException;
+import com.swiggy.wallet.entities.Wallet;
+import com.swiggy.wallet.exceptions.*;
 import com.swiggy.wallet.repository.TransactionDAO;
 import com.swiggy.wallet.repository.UserDAO;
+import com.swiggy.wallet.repository.WalletDAO;
 import com.swiggy.wallet.requestModels.TransactionRequestModel;
 import com.swiggy.wallet.responseModels.TransactionsResponseModel;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.swiggy.wallet.responseModels.ResponseMessage.TRANSACTION_SUCCESSFUL;
+import static com.swiggy.wallet.responseModels.ResponseMessage.*;
 
 @Service
 public class TransactionServicesImpl implements TransactionService{
@@ -31,6 +31,9 @@ public class TransactionServicesImpl implements TransactionService{
     private UserDAO userDao;
 
     @Autowired
+    private WalletDAO walletDao;
+
+    @Autowired
     private WalletService walletService;
 
     @Override
@@ -39,7 +42,7 @@ public class TransactionServicesImpl implements TransactionService{
         User user = userDao.findByUserName(username).orElseThrow(()-> new UsernameNotFoundException("Username not found."));
 
         List<Transaction> transactions = transactionDao.findTransactionsOfUser(user);
-        List<TransactionsResponseModel> response = transactions.stream().map((transaction -> new TransactionsResponseModel(transaction.getTimestamp(), transaction.getSender().getUserName(), transaction.getReceiver().getUserName(), transaction.getMoney()))).collect(Collectors.toList());
+        List<TransactionsResponseModel> response = transactions.stream().map((transaction -> new TransactionsResponseModel(transaction.getTimestamp(), transaction.getSender().getUserName(), transaction.getSenderWalletId(), transaction.getReceiver().getUserName(), transaction.getReceiverWalletId(), transaction.getMoney()))).collect(Collectors.toList());
 
         return response;
     }
@@ -50,23 +53,30 @@ public class TransactionServicesImpl implements TransactionService{
         User user = userDao.findByUserName(username).orElseThrow(()-> new UsernameNotFoundException("Username not found."));
 
         List<Transaction> transactions = transactionDao.findTransactionsOfUserDateBased(user,startDate.atTime(0,0,0), endDate.atTime(23,59,59));
-        List<TransactionsResponseModel> response = transactions.stream().map((transaction -> new TransactionsResponseModel(transaction.getTimestamp(), transaction.getSender().getUserName(), transaction.getReceiver().getUserName(), transaction.getMoney()))).collect(Collectors.toList());
+        List<TransactionsResponseModel> response = transactions.stream().map((transaction -> new TransactionsResponseModel(transaction.getTimestamp(), transaction.getSender().getUserName(), transaction.getSenderWalletId(), transaction.getReceiver().getUserName(), transaction.getReceiverWalletId(), transaction.getMoney()))).collect(Collectors.toList());
 
         return response;
     }
 
     @Override
-    public String transact(TransactionRequestModel requestModel) throws InsufficientBalanceException, InvalidAmountException, UserNotFoundException {
+    public String transact(TransactionRequestModel requestModel) throws InsufficientBalanceException, InvalidAmountException, UserNotFoundException, WalletNotFoundException, SameWalletsForTransactionException {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User sender = userDao.findByUserName(username).orElseThrow(() -> new UsernameNotFoundException("User "+ username + " not found."));
         User receiver = userDao.findByUserName(requestModel.getReceiverName()).orElseThrow(() -> new UserNotFoundException("User "+ requestModel.getReceiverName() + " not found."));
+        Wallet senderWallet = walletDao.findById(requestModel.getSenderWalletId()).orElseThrow(()-> new WalletNotFoundException(SENDER_WALLET_NOT_FOUND));
+        Wallet receiverWallet = walletDao.findById(requestModel.getReceiverWalletId()).orElseThrow(()-> new WalletNotFoundException(RECEIVER_WALLET_NOT_FOUND));
 
-        sender.getWallet().withdraw(requestModel.getMoney());
-        receiver.getWallet().deposit(requestModel.getMoney());
+        if(!sender.getWallets().contains(senderWallet) || !receiver.getWallets().contains(receiverWallet))
+            throw new WalletNotFoundException(WALLET_ID_DOES_NOT_MATCH);
+        if(senderWallet.equals(receiverWallet))
+            throw new SameWalletsForTransactionException(WALLETS_SAME_IN_TRANSACTION);
+
+        senderWallet.withdraw(requestModel.getMoney());
+        receiverWallet.deposit(requestModel.getMoney());
 
         userDao.save(sender);
         userDao.save(receiver);
-        Transaction transaction = new Transaction(LocalDateTime.now(),requestModel.getMoney(), sender, receiver);
+        Transaction transaction = new Transaction(LocalDateTime.now(),requestModel.getMoney(), sender, senderWallet.getWalletId(), receiver, receiverWallet.getWalletId());
         transactionDao.save(transaction);
 
         return TRANSACTION_SUCCESSFUL;

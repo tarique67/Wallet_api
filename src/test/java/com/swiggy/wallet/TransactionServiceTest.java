@@ -4,12 +4,12 @@ import com.swiggy.wallet.entities.Money;
 import com.swiggy.wallet.entities.Transaction;
 import com.swiggy.wallet.entities.User;
 import com.swiggy.wallet.entities.Wallet;
+import com.swiggy.wallet.enums.Country;
 import com.swiggy.wallet.enums.Currency;
-import com.swiggy.wallet.exceptions.InsufficientBalanceException;
-import com.swiggy.wallet.exceptions.InvalidAmountException;
-import com.swiggy.wallet.exceptions.UserNotFoundException;
+import com.swiggy.wallet.exceptions.*;
 import com.swiggy.wallet.repository.TransactionDAO;
 import com.swiggy.wallet.repository.UserDAO;
+import com.swiggy.wallet.repository.WalletDAO;
 import com.swiggy.wallet.requestModels.TransactionRequestModel;
 import com.swiggy.wallet.responseModels.TransactionsResponseModel;
 import com.swiggy.wallet.services.TransactionServicesImpl;
@@ -50,7 +50,7 @@ public class TransactionServiceTest {
     private PasswordEncoder passwordEncoder;
 
     @Mock
-    private WalletService walletService;
+    private WalletDAO walletDao;
 
     @Mock
     private SecurityContext securityContext;
@@ -67,18 +67,20 @@ public class TransactionServiceTest {
     }
 
     @Test
-    void expectTransactionSuccessful() throws InsufficientBalanceException, InvalidAmountException, UserNotFoundException {
+    void expectTransactionSuccessful() throws InsufficientBalanceException, InvalidAmountException, UserNotFoundException, SameWalletsForTransactionException, WalletNotFoundException {
         Wallet senderWallet = spy(new Wallet(1, new Money(0, Currency.INR)));
         Wallet receiverWallet = spy(new Wallet(2, new Money(0, Currency.INR)));
         senderWallet.deposit(new Money(100.0,Currency.INR));
-        User sender = new User(1,"sender", "senderPassword", senderWallet);
-        User receiver = new User(2,"receiver", "receiverPassword", receiverWallet);
-        TransactionRequestModel requestModel = spy(new TransactionRequestModel("receiver", new Money(100.0, Currency.INR)));
+        User sender = new User(1,"sender", "senderPassword", Country.INDIA, Arrays.asList(senderWallet));
+        User receiver = new User(2,"receiver", "receiverPassword", Country.INDIA, Arrays.asList(receiverWallet));
+        TransactionRequestModel requestModel = spy(new TransactionRequestModel(1,"receiver", 2, new Money(100.0, Currency.INR)));
         when(authentication.getName()).thenReturn("sender");
         when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
         when(userDao.findByUserName("sender")).thenReturn(Optional.of(sender));
         when(userDao.findByUserName("receiver")).thenReturn(Optional.of(receiver));
+        when(walletDao.findById(1)).thenReturn(Optional.of(senderWallet));
+        when(walletDao.findById(2)).thenReturn(Optional.of(receiverWallet));
 
         transactionService.transact(requestModel);
 
@@ -91,9 +93,9 @@ public class TransactionServiceTest {
 
     @Test
     void expectReceiverNotFoundOnTransaction() throws InsufficientBalanceException, InvalidAmountException {
-        User sender = new User("sender", "senderPassword");
-        User receiver = new User("receiver", "receiverPassword");
-        TransactionRequestModel requestModel = new TransactionRequestModel("receiver", new Money(100.0, Currency.INR));
+        Wallet senderWallet = spy(new Wallet(1, new Money(0, Currency.INR)));
+        User sender = new User(1,"sender", "senderPassword", Country.INDIA, Arrays.asList(senderWallet));
+        TransactionRequestModel requestModel = new TransactionRequestModel(1, "receiver", 2,new Money(100.0, Currency.INR));
         when(authentication.getName()).thenReturn("sender");
         when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
@@ -101,21 +103,100 @@ public class TransactionServiceTest {
         when(userDao.findByUserName("receiver")).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class,()-> transactionService.transact(requestModel));
-//        verify(wallet, times(0)).deposit(requestModel.getMoney());
-//        verify(wallet, times(0)).withdraw(requestModel.getMoney());
+
+        verify(senderWallet, times(0)).withdraw(requestModel.getMoney());
+        verify(userDao, times(0)).save(sender);
+    }
+
+    @Test
+    void expectSameWalletsExceptionOnTransaction() throws InsufficientBalanceException, InvalidAmountException {
+        Wallet senderWallet = spy(new Wallet(1, new Money(0, Currency.INR)));
+        User sender = new User(1,"sender", "senderPassword", Country.INDIA, Arrays.asList(senderWallet));
+        TransactionRequestModel requestModel = new TransactionRequestModel(1, "sender", 1,new Money(100.0, Currency.INR));
+        when(authentication.getName()).thenReturn("sender");
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        when(userDao.findByUserName("sender")).thenReturn(Optional.of(sender));
+        when(walletDao.findById(1)).thenReturn(Optional.of(senderWallet));
+
+        assertThrows(SameWalletsForTransactionException.class,()-> transactionService.transact(requestModel));
+
+        verify(senderWallet, times(0)).deposit(requestModel.getMoney());
+        verify(senderWallet, times(0)).withdraw(requestModel.getMoney());
+        verify(userDao, times(0)).save(sender);
+    }
+
+    @Test
+    void expectSenderWalletNotFoundExceptionOnTransaction() throws InsufficientBalanceException, InvalidAmountException, UserNotFoundException, SameWalletsForTransactionException, WalletNotFoundException {
+        Wallet receiverWallet = spy(new Wallet(2, new Money(0, Currency.INR)));
+        User sender = new User(1,"sender", "senderPassword", Country.INDIA, new ArrayList<>());
+        User receiver = new User(2,"receiver", "receiverPassword", Country.INDIA, Arrays.asList(receiverWallet));
+        TransactionRequestModel requestModel = spy(new TransactionRequestModel(1,"receiver", 2, new Money(100.0, Currency.INR)));
+        when(authentication.getName()).thenReturn("sender");
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        when(userDao.findByUserName("sender")).thenReturn(Optional.of(sender));
+        when(userDao.findByUserName("receiver")).thenReturn(Optional.of(receiver));
+        when(walletDao.findById(2)).thenReturn(Optional.of(receiverWallet));
+
+        assertThrows(WalletNotFoundException.class,()-> transactionService.transact(requestModel));
+        verify(receiverWallet, times(0)).deposit(requestModel.getMoney());
         verify(userDao, times(0)).save(sender);
         verify(userDao, times(0)).save(receiver);
     }
 
     @Test
-    void expectAllTransactions() {
-        User sender = new User("sender","testPassword");
-        User receiver = new User("receiver","testPassword");
+    void expectReceiverWalletNotFoundExceptionOnTransaction() throws InsufficientBalanceException, InvalidAmountException, UserNotFoundException, SameWalletsForTransactionException, WalletNotFoundException {
+        Wallet senderWallet = spy(new Wallet(2, new Money(0, Currency.INR)));
+        User sender = new User(1,"sender", "senderPassword", Country.INDIA, Arrays.asList(senderWallet));
+        User receiver = new User(2,"receiver", "receiverPassword", Country.INDIA, new ArrayList<>());
+        TransactionRequestModel requestModel = spy(new TransactionRequestModel(1,"receiver", 2, new Money(100.0, Currency.INR)));
         when(authentication.getName()).thenReturn("sender");
         when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
-        Transaction firstTransaction = new Transaction(LocalDateTime.now(), new Money(100, Currency.INR), sender, receiver);
-        Transaction secondTransaction = new Transaction(LocalDateTime.now(),new Money(200, Currency.INR), sender, receiver);
+        when(userDao.findByUserName("sender")).thenReturn(Optional.of(sender));
+        when(userDao.findByUserName("receiver")).thenReturn(Optional.of(receiver));
+        when(walletDao.findById(2)).thenReturn(Optional.of(senderWallet));
+
+        assertThrows(WalletNotFoundException.class,()-> transactionService.transact(requestModel));
+        verify(senderWallet, times(0)).deposit(requestModel.getMoney());
+        verify(userDao, times(0)).save(sender);
+        verify(userDao, times(0)).save(receiver);
+    }
+
+    @Test
+    void expectTransactionSuccessfulForTwoDifferentWallets() throws InsufficientBalanceException, InvalidAmountException, UserNotFoundException, SameWalletsForTransactionException, WalletNotFoundException {
+        Wallet firstSenderWallet = spy(new Wallet(1, new Money(0, Currency.INR)));
+        Wallet secondSenderWallet = spy(new Wallet(2, new Money(0, Currency.INR)));
+        firstSenderWallet.deposit(new Money(100.0,Currency.INR));
+        User sender = new User(1,"sender", "senderPassword", Country.INDIA, Arrays.asList(firstSenderWallet, secondSenderWallet));
+        TransactionRequestModel requestModel = spy(new TransactionRequestModel(1,"sender", 2, new Money(100.0, Currency.INR)));
+        when(authentication.getName()).thenReturn("sender");
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        when(userDao.findByUserName("sender")).thenReturn(Optional.of(sender));
+        when(walletDao.findById(1)).thenReturn(Optional.of(firstSenderWallet));
+        when(walletDao.findById(2)).thenReturn(Optional.of(secondSenderWallet));
+
+        transactionService.transact(requestModel);
+
+        verify(firstSenderWallet, times(1)).deposit(requestModel.getMoney());
+        verify(firstSenderWallet, times(1)).withdraw(requestModel.getMoney());
+        verify(secondSenderWallet, times(1)).deposit(requestModel.getMoney());
+        verify(userDao, times(2)).save(sender);
+    }
+
+    @Test
+    void expectAllTransactions() {
+        User sender = new User("sender","testPassword", Country.INDIA);
+        User receiver = new User("receiver","testPassword", Country.INDIA);
+        when(authentication.getName()).thenReturn("sender");
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        Wallet senderWallet = new Wallet(1, new Money(1000.0, Currency.INR));
+        Wallet receiverWallet = new Wallet(2, new Money(0, Currency.INR));
+        Transaction firstTransaction = new Transaction(LocalDateTime.now(), new Money(100, Currency.INR), sender, 1, receiver, 2);
+        Transaction secondTransaction = new Transaction(LocalDateTime.now(),new Money(200, Currency.INR), sender, 1,receiver, 2);
         List<Transaction> transactions = Arrays.asList(firstTransaction, secondTransaction);
         when(userDao.findByUserName("sender")).thenReturn(Optional.of(sender));
         when(transactionDao.findTransactionsOfUser(sender)).thenReturn(transactions);
@@ -129,11 +210,13 @@ public class TransactionServiceTest {
 
     @Test
     void expectAllTransactionsDateBased() {
-        User sender = new User("sender", "senderPassword");
-        User receiver = new User("receiver", "receiverPassword");
+        User sender = new User("sender", "senderPassword", Country.INDIA);
+        User receiver = new User("receiver", "receiverPassword", Country.INDIA);
         LocalDateTime startDate = LocalDate.of(2022, 1, 1).atStartOfDay();
         LocalDateTime endDate = LocalDate.of(2022, 1, 31).atTime(23, 59, 59);
-        Transaction transaction = new Transaction(LocalDateTime.now(), new Money(100, Currency.INR) , sender, receiver);
+        Wallet senderWallet = new Wallet(1, new Money(1000.0, Currency.INR));
+        Wallet receiverWallet = new Wallet(2, new Money(0, Currency.INR));
+        Transaction transaction = new Transaction(LocalDateTime.now(), new Money(100, Currency.INR) , sender, 1, receiver, 2);
         List<Transaction> transactions = new ArrayList<>();
         transactions.add(transaction);
         when(authentication.getName()).thenReturn("sender");
@@ -150,12 +233,14 @@ public class TransactionServiceTest {
 
     @Test
     void expectAllTransactionsDateBasedDifferentFromAllTransaction() {
-        User sender = new User("sender", "senderPassword");
-        User receiver = new User("receiver", "receiverPassword");
+        User sender = new User("sender", "senderPassword", Country.INDIA);
+        User receiver = new User("receiver", "receiverPassword", Country.INDIA);
         LocalDateTime startDate = LocalDate.of(2022, 1, 1).atStartOfDay();
         LocalDateTime endDate = LocalDate.of(2022, 1, 31).atTime(23, 59, 59);
-        Transaction firstTransaction = new Transaction(LocalDateTime.now(), new Money(100, Currency.INR) , sender, receiver);
-        Transaction secondTransaction = new Transaction(LocalDateTime.now().minusDays(2), new Money(100, Currency.INR) , sender, receiver);
+        Wallet senderWallet = new Wallet(1, new Money(1000.0, Currency.INR));
+        Wallet receiverWallet = new Wallet(2, new Money(0, Currency.INR));
+        Transaction firstTransaction = new Transaction(LocalDateTime.now(), new Money(100, Currency.INR) , sender, 1, receiver, 2);
+        Transaction secondTransaction = new Transaction(LocalDateTime.now().minusDays(2), new Money(100, Currency.INR) , sender, 1, receiver, 2);
         List<Transaction> allTransactions = new ArrayList<>();
         allTransactions.add(firstTransaction);
         allTransactions.add(secondTransaction);

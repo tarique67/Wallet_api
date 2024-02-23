@@ -23,19 +23,19 @@ public class Money {
     private Currency currency;
 
     public void add(Money money) throws InvalidAmountException {
-        if((money.amount * money.currency.getConversionFactor()) <= 0)
+        if((money.amount/this.currency.getConversionFactor()) * money.currency.getConversionFactor() <= 0)
             throw new InvalidAmountException(DEPOSIT_SHOULD_BE_GREATER_THAN_0);
 
-        this.amount += money.amount * money.currency.getConversionFactor();
+        this.amount += (money.amount/this.currency.getConversionFactor()) * money.currency.getConversionFactor();
     }
 
     public void subtract(Money money) throws InvalidAmountException, InsufficientBalanceException {
-        if((money.amount * money.currency.getConversionFactor()) > this.amount)
+        if((money.amount/this.currency.getConversionFactor()) * money.currency.getConversionFactor() > this.amount)
             throw new InsufficientBalanceException(INSUFFICIENT_BALANCE_EXCEPTION);
 
-        if((money.amount * money.currency.getConversionFactor()) <= 0)
+        if((money.amount/this.currency.getConversionFactor()) * money.currency.getConversionFactor() <= 0)
             throw new InvalidAmountException(WITHDRAWAL_SHOULD_BE_GREATER_THAN_0);
 
-        this.amount -= money.amount * money.currency.getConversionFactor();
+        this.amount -= (money.amount/this.currency.getConversionFactor()) * money.currency.getConversionFactor();
     }
 }

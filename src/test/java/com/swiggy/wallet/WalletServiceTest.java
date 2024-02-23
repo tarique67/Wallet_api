@@ -3,6 +3,7 @@ package com.swiggy.wallet;
 import com.swiggy.wallet.entities.Money;
 import com.swiggy.wallet.entities.User;
 import com.swiggy.wallet.entities.Wallet;
+import com.swiggy.wallet.enums.Country;
 import com.swiggy.wallet.exceptions.AuthenticationFailedException;
 import com.swiggy.wallet.exceptions.InsufficientBalanceException;
 import com.swiggy.wallet.exceptions.InvalidAmountException;
@@ -59,11 +60,11 @@ public class WalletServiceTest {
 
     @Test
     void expectAmountDepositedWithValidAmount() throws Exception {
-        User user = spy(new User("testUser", "testPassword"));
-        Wallet wallet = new Wallet(1, new Money());
+        User user = spy(new User("testUser", "testPassword", Country.INDIA));
+        Wallet wallet = new Wallet(1, new Money(0.0, Currency.INR));
         when(userDao.findByUserName("testUser")).thenReturn(Optional.of(user));
         when(walletDao.findById(1)).thenReturn(Optional.of(wallet));
-        when(user.getWallet()).thenReturn(wallet);
+        when(user.getWallets()).thenReturn(Arrays.asList(wallet));
         WalletRequestModel requestModel = new WalletRequestModel(new Money(100,Currency.INR));
 
         walletService.deposit(1, "testUser", requestModel);
@@ -84,12 +85,12 @@ public class WalletServiceTest {
 
     @Test
     void expectAmountWithdrawn() throws Exception {
-        Wallet wallet = new Wallet(1, new Money());
+        Wallet wallet = new Wallet(1, new Money(0.0,Currency.INR));
         wallet.deposit(new Money(100, Currency.INR));
-        User user = spy(new User(1,"testUser", "testPassword", wallet));
+        User user = spy(new User(1,"testUser", "testPassword", Country.INDIA, Arrays.asList(wallet)));
         when(userDao.findByUserName("testUser")).thenReturn(Optional.of(user));
         when(walletDao.findById(1)).thenReturn(Optional.of(wallet));
-        when(user.getWallet()).thenReturn(wallet);
+        when(user.getWallets()).thenReturn(Arrays.asList(wallet));
         WalletRequestModel requestModel = new WalletRequestModel(new Money(50, Currency.INR));
 
         WalletResponseModel returnedWallet = walletService.withdraw(1, "testUser", requestModel);
@@ -101,11 +102,11 @@ public class WalletServiceTest {
 
     @Test
     void expectInsufficientBalanceException() throws AuthenticationFailedException, InvalidAmountException {
-        Wallet wallet = new Wallet(1,new Money());
+        Wallet wallet = new Wallet(1,new Money(0.0,Currency.INR));
         when(walletDao.findById(1)).thenReturn(Optional.of(wallet));
-        User user = spy(new User("testUser", "testPassword"));
+        User user = spy(new User("testUser", "testPassword", Country.INDIA));
         when(userDao.findByUserName("testUser")).thenReturn(Optional.of(user));
-        when(user.getWallet()).thenReturn(wallet);
+        when(user.getWallets()).thenReturn(Arrays.asList(wallet));
         WalletRequestModel requestModel = new WalletRequestModel(new Money(50, Currency.INR));
 
         assertThrows(InsufficientBalanceException.class, () -> {
@@ -149,25 +150,4 @@ public class WalletServiceTest {
         verify(userDao, never()).save(any());
     }
 
-//    @Test
-//    void expectInsufficientBalanceExceptionOnTransaction() throws InsufficientBalanceException, InvalidAmountException {
-//        Money moneyForTransaction = new Money(100, Currency.INR);
-//        Wallet sendersWallet = new Wallet();
-//        Wallet receiversWallet = new Wallet();
-//
-//        assertThrows(InsufficientBalanceException.class,()-> walletService.transact(sendersWallet, receiversWallet, moneyForTransaction));
-//    }
-
-//    @Test
-//    void expectTransactionSuccessful() throws InsufficientBalanceException, InvalidAmountException {
-//        Money moneyForTransaction = new Money(100, Currency.INR);
-//        Wallet sendersWallet = wallet;
-//        sendersWallet.deposit(new Money(1000, Currency.INR));
-//        Wallet receiversWallet = wallet;
-//
-//        walletService.transact(sendersWallet,receiversWallet,moneyForTransaction);
-//
-//        verify(sendersWallet, times(1)).withdraw(moneyForTransaction);
-//        verify(receiversWallet, times(1)).deposit(moneyForTransaction);
-//    }
 }

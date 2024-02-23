@@ -1,14 +1,10 @@
 package com.swiggy.wallet;
 
-import com.swiggy.wallet.entities.Money;
 import com.swiggy.wallet.entities.User;
-import com.swiggy.wallet.enums.Currency;
-import com.swiggy.wallet.exceptions.InsufficientBalanceException;
-import com.swiggy.wallet.exceptions.InvalidAmountException;
+import com.swiggy.wallet.enums.Country;
 import com.swiggy.wallet.exceptions.UserAlreadyExistsException;
 import com.swiggy.wallet.exceptions.UserNotFoundException;
 import com.swiggy.wallet.repository.UserDAO;
-import com.swiggy.wallet.requestModels.TransactionRequestModel;
 import com.swiggy.wallet.requestModels.UserRequestModel;
 import com.swiggy.wallet.services.UserServiceImpl;
 import com.swiggy.wallet.services.WalletService;
@@ -22,6 +18,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.ArrayList;
 import java.util.Optional;
 
 import static com.swiggy.wallet.responseModels.ResponseMessage.USER_DELETED_SUCCESSFULLY;
@@ -60,14 +57,14 @@ public class UserServiceTest {
     void expectUserCreated() throws UserAlreadyExistsException {
         when(userDao.findByUserName("testUser")).thenReturn(Optional.empty());
         when(passwordEncoder.encode("testPassword")).thenReturn("encodedPassword");
-        when(userDao.save(any())).thenReturn(new User("testUser", "encodedPassword"));
-        UserRequestModel userRequestModel = new UserRequestModel("testUser", "testPassword");
+        when(userDao.save(any())).thenReturn(new User("testUser", "encodedPassword", Country.INDIA));
+        UserRequestModel userRequestModel = new UserRequestModel("testUser", "testPassword", Country.INDIA);
 
         User savedUser = userService.register(userRequestModel);
 
         assertEquals("testUser", savedUser.getUserName());
         assertEquals("encodedPassword", savedUser.getPassword());
-        assertNotNull(savedUser.getWallet());
+        assertNotNull(savedUser.getWallets());
         verify(userDao, times(1)).findByUserName("testUser");
         verify(passwordEncoder, times(1)).encode("testPassword");
         verify(userDao, times(1)).save(any());
@@ -76,7 +73,7 @@ public class UserServiceTest {
     @Test
     void expectUserAlreadyExistsException() {
         when(userDao.findByUserName("existingUser")).thenReturn(Optional.of(new User()));
-        UserRequestModel userRequestModel = new UserRequestModel("existingUser", "password");
+        UserRequestModel userRequestModel = new UserRequestModel("existingUser", "password", Country.INDIA);
 
         assertThrows(UserAlreadyExistsException.class, () -> {
             userService.register(userRequestModel);
@@ -88,7 +85,7 @@ public class UserServiceTest {
     @Test
     void expectDeleteUserSuccessfully() throws UserNotFoundException {
         String username = "testUser";
-        User user = new User(username, "password");
+        User user = new User(username, "password", Country.INDIA);
         when(userDao.findByUserName(username)).thenReturn(Optional.of(user));
         when(authentication.getName()).thenReturn(username);
         when(securityContext.getAuthentication()).thenReturn(authentication);
@@ -114,4 +111,48 @@ public class UserServiceTest {
         verify(userDao, never()).delete(any());
     }
 
+    @Test
+    void expectWalletAddedToUser() throws UserNotFoundException {
+        String username = "testUser";
+        User user = new User(1,username, "password", Country.INDIA, new ArrayList<>());
+        when(userDao.findByUserName(username)).thenReturn(Optional.of(user));
+        when(authentication.getName()).thenReturn(username);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        userService.addWallet(1);
+
+        verify(userDao, times(1)).findByUserName(username);
+        verify(userDao, times(1)).save(user);
+        assertEquals(1, user.getWallets().size() );
+    }
+
+    @Test
+    void expect2WalletsAddedToUser() throws UserNotFoundException {
+        String username = "testUser";
+        User user = new User(1,username, "password", Country.INDIA, new ArrayList<>());
+        when(userDao.findByUserName(username)).thenReturn(Optional.of(user));
+        when(authentication.getName()).thenReturn(username);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        userService.addWallet(1);
+        userService.addWallet(1);
+
+        verify(userDao, times(2)).findByUserName(username);
+        verify(userDao, times(2)).save(user);
+        assertEquals(2, user.getWallets().size() );
+    }
+
+    @Test
+    void expectUserNotFoundException() throws UserNotFoundException {
+        String username = "testUser";
+        User user = new User(1,username, "password", Country.INDIA, new ArrayList<>());
+        when(userDao.findByUserName(username)).thenReturn(Optional.of(user));
+        when(authentication.getName()).thenReturn(username);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        assertThrows(UserNotFoundException.class,()-> userService.addWallet(2));
+    }
 }

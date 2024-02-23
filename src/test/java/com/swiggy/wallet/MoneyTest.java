@@ -93,4 +93,38 @@ public class MoneyTest {
 
         assertThrows(InvalidAmountException.class, ()-> money.subtract(new Money(-50, Currency.INR)));
     }
+
+    @Test
+    void expect1USDWhenAdding83_10INR() throws InvalidAmountException {
+        Money money = new Money(0.0, Currency.USD);
+
+        money.add(new Money(83.10, Currency.INR));
+
+        assertEquals(new Money(1.0, Currency.USD), money);
+    }
+
+    @Test
+    void expect1EURWhenAdding89_04INR() throws InvalidAmountException {
+        Money money = new Money(0.0, Currency.EUR);
+
+        money.add(new Money(89.04, Currency.INR));
+
+        assertEquals(new Money(1.0, Currency.EUR), money);
+    }
+
+    @Test
+    void expectExceptionWhenSubtracting1EURFrom1USD() throws InvalidAmountException, InsufficientBalanceException {
+        Money money = new Money(0.0, Currency.USD);
+
+        assertThrows(InsufficientBalanceException.class, ()-> money.subtract(new Money(1, Currency.EUR)));
+    }
+
+    @Test
+    void expect1_07USDWhenAdding1EUR() throws InvalidAmountException {
+        Money money = new Money(0.0, Currency.USD);
+
+        money.add(new Money(1.0, Currency.EUR));
+
+        assertEquals(1.07, Math.round(money.getAmount()*100.0)/100.0);
+    }
 }

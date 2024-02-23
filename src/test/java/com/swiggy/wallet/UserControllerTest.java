@@ -3,6 +3,8 @@ package com.swiggy.wallet;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swiggy.wallet.entities.Money;
 import com.swiggy.wallet.entities.User;
+import com.swiggy.wallet.entities.Wallet;
+import com.swiggy.wallet.enums.Country;
 import com.swiggy.wallet.enums.Currency;
 import com.swiggy.wallet.exceptions.UserAlreadyExistsException;
 import com.swiggy.wallet.exceptions.UserNotFoundException;
@@ -18,6 +20,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import static com.swiggy.wallet.responseModels.ResponseMessage.TRANSACTION_SUCCESSFUL;
 import static com.swiggy.wallet.responseModels.ResponseMessage.USER_DELETED_SUCCESSFULLY;
@@ -45,8 +50,8 @@ public class UserControllerTest {
 
     @Test
     void expectUserCreated() throws Exception {
-        UserRequestModel userRequestModel = new UserRequestModel("testUser", "testPassword");
-        User user = new User("testUser", "testPassword");
+        UserRequestModel userRequestModel = new UserRequestModel("testUser", "testPassword", Country.INDIA);
+        User user = new User("testUser", "testPassword", Country.INDIA);
 
         when(userService.register(userRequestModel)).thenReturn(user);
 
@@ -60,7 +65,7 @@ public class UserControllerTest {
 
     @Test
     void expectUserAlreadyExists() throws Exception {
-        UserRequestModel userRequestModel = new UserRequestModel("testUser","testPassword");
+        UserRequestModel userRequestModel = new UserRequestModel("testUser","testPassword", Country.INDIA);
 
         when(userService.register(userRequestModel)).thenThrow(UserAlreadyExistsException.class);
 
@@ -96,4 +101,28 @@ public class UserControllerTest {
         verify(userService, times(1)).delete();
     }
 
+    @Test
+    @WithMockUser(username = "user")
+    void expectWalletAddedToUser() throws Exception {
+        User user = new User(1, "user", "pass",Country.INDIA, Arrays.asList(new Wallet(1, new Money(0.0,Currency.INR)), new Wallet(2, new Money(0.0, Currency.INR))));
+        when(userService.addWallet(1)).thenReturn(user);
+
+        mockMvc.perform(put("/api/v1/users/1/wallet")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.wallets.[1]").exists());
+        verify(userService, times(1)).addWallet(1);
+    }
+
+    @Test
+    @WithMockUser(username = "user")
+    void expectUserNotFoundWhenWalletAdded() throws Exception {
+        User user = new User(1, "user", "pass",Country.INDIA, Arrays.asList(new Wallet(1, new Money(0.0,Currency.INR))));
+        when(userService.addWallet(2)).thenThrow(UserNotFoundException.class);
+
+        mockMvc.perform(put("/api/v1/users/2/wallet")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+        verify(userService, times(1)).addWallet(2);
+    }
 }

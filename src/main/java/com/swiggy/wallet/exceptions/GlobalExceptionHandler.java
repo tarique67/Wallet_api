@@ -2,6 +2,7 @@ package com.swiggy.wallet.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -10,6 +11,8 @@ import org.springframework.web.context.request.WebRequest;
 
 import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
+
+import static com.swiggy.wallet.responseModels.ResponseMessage.ACCEPTED_LOCATIONS;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -67,7 +70,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorDetails> badCredentialsExceptionHandler(BadCredentialsException exception, WebRequest re){
         ErrorDetails err = new ErrorDetails(LocalDateTime.now(), exception.getMessage(), re.getDescription(false));
 
-        return new ResponseEntity<ErrorDetails>(err, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<ErrorDetails>(err, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(WalletNotFoundException.class)
@@ -77,4 +80,17 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<ErrorDetails>(err, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorDetails> httpMessageNotReadableExceptionHandler(HttpMessageNotReadableException exception, WebRequest re){
+        ErrorDetails err = new ErrorDetails(LocalDateTime.now(), ACCEPTED_LOCATIONS, re.getDescription(false));
+
+        return new ResponseEntity<ErrorDetails>(err, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(SameWalletsForTransactionException.class)
+    public ResponseEntity<ErrorDetails> sameWalletsForTransactionExceptionHandler(SameWalletsForTransactionException exception, WebRequest re){
+        ErrorDetails err = new ErrorDetails(LocalDateTime.now(), exception.getMessage(), re.getDescription(false));
+
+        return new ResponseEntity<ErrorDetails>(err, HttpStatus.BAD_REQUEST);
+    }
 }

@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class TransactionRequestModel {
 
+    private int senderWalletId;
     private String receiverName;
+    private int receiverWalletId;
     private Money money;
 }

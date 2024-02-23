@@ -47,7 +47,7 @@ public class WalletControllerTest {
     @WithMockUser(username = "user")
     void expectAmountDepositedSuccessfully() throws Exception {
         WalletRequestModel requestModel = new WalletRequestModel(new Money(100, Currency.INR));
-        WalletResponseModel responseModel = new WalletResponseModel(new Money(100, Currency.INR));
+        WalletResponseModel responseModel = new WalletResponseModel(1,new Money(100, Currency.INR));
         when(walletService.deposit(anyInt(), anyString(), any())).thenReturn(responseModel);
 
         mockMvc.perform(put("/api/v1/wallets/1/deposit")
@@ -61,7 +61,7 @@ public class WalletControllerTest {
     @Test
     void expectUnauthorizedOnDeposit() throws Exception {
         WalletRequestModel requestModel = new WalletRequestModel(new Money(100, Currency.INR));
-        WalletResponseModel responseModel = new WalletResponseModel(new Money(100, Currency.INR));
+        WalletResponseModel responseModel = new WalletResponseModel(1, new Money(100, Currency.INR));
         when(walletService.deposit(anyInt(), anyString(), any())).thenReturn(responseModel);
 
         mockMvc.perform(put("/api/v1/wallets/deposit")
@@ -76,7 +76,7 @@ public class WalletControllerTest {
     void expectWithdrawalSuccessful() throws Exception {
         WalletRequestModel requestModel = new WalletRequestModel(new Money(50, Currency.INR));
         String requestBody = objectMapper.writeValueAsString(requestModel);
-        WalletResponseModel responseModel = new WalletResponseModel(new Money(50, Currency.INR));
+        WalletResponseModel responseModel = new WalletResponseModel(1, new Money(50, Currency.INR));
         when(walletService.withdraw(anyInt(), anyString(), any())).thenReturn(responseModel);
 
         mockMvc.perform(put("/api/v1/wallets/1/withdraw")

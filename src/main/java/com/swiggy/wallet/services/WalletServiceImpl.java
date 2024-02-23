@@ -1,6 +1,5 @@
 package com.swiggy.wallet.services;
 
-import com.swiggy.wallet.entities.Money;
 import com.swiggy.wallet.entities.User;
 import com.swiggy.wallet.entities.Wallet;
 import com.swiggy.wallet.exceptions.AuthenticationFailedException;
@@ -38,7 +37,7 @@ public class WalletServiceImpl implements WalletService {
         List<Wallet> wallets = walletDao.findAll();
         List<WalletResponseModel> response = new ArrayList<>();
         for(Wallet wallet : wallets){
-            response.add(new WalletResponseModel(wallet.getMoney()));
+            response.add(new WalletResponseModel(wallet.getWalletId(), wallet.getMoney()));
         }
         return response;
     }
@@ -47,26 +46,26 @@ public class WalletServiceImpl implements WalletService {
     public WalletResponseModel deposit(int walletId, String username, WalletRequestModel requestModel) throws InvalidAmountException, AuthenticationFailedException, WalletNotFoundException {
         User user = userDao.findByUserName(username).orElseThrow(() -> new AuthenticationFailedException("Username or password does not match."));
         Wallet wallet = walletDao.findById(walletId).orElseThrow(() -> new WalletNotFoundException(WALLET_ID_DOES_NOT_MATCH));
-        if(user.getWallet().getWalletId() != walletId)
+        if(!user.getWallets().contains(wallet))
             throw new AuthenticationFailedException(WALLET_ID_DOES_NOT_MATCH);
 
         wallet.deposit(requestModel.getMoney());
 
         walletDao.save(wallet);
-        return new WalletResponseModel(user.getWallet().getMoney());
+        return new WalletResponseModel(walletId, wallet.getMoney());
     }
 
     @Override
     public WalletResponseModel withdraw(int walletId, String username, WalletRequestModel requestModel) throws InsufficientBalanceException, InvalidAmountException, AuthenticationFailedException, WalletNotFoundException {
         User user = userDao.findByUserName(username).orElseThrow(() -> new AuthenticationFailedException("Username or password does not match."));
         Wallet wallet = walletDao.findById(walletId).orElseThrow(() -> new WalletNotFoundException(WALLET_ID_DOES_NOT_MATCH));
-        if(user.getWallet().getWalletId() != walletId)
+        if(!user.getWallets().contains(wallet))
             throw new AuthenticationFailedException(WALLET_ID_DOES_NOT_MATCH);
 
         wallet.withdraw(requestModel.getMoney());
 
         walletDao.save(wallet);
-        return new WalletResponseModel(user.getWallet().getMoney());
+        return new WalletResponseModel(walletId, wallet.getMoney());
     }
 
 }

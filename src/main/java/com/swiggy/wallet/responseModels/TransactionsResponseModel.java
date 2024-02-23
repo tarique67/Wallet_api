@@ -14,6 +14,8 @@ public class TransactionsResponseModel {
 
     private LocalDateTime timestamp;
     private String sender;
+    private int senderWalletId;
     private String receiver;
+    private int receiverWalletId;
     private Money money;
 }

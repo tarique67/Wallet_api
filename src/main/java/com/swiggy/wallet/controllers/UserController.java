@@ -1,11 +1,8 @@
 package com.swiggy.wallet.controllers;
 
 import com.swiggy.wallet.entities.User;
-import com.swiggy.wallet.exceptions.InsufficientBalanceException;
-import com.swiggy.wallet.exceptions.InvalidAmountException;
 import com.swiggy.wallet.exceptions.UserAlreadyExistsException;
 import com.swiggy.wallet.exceptions.UserNotFoundException;
-import com.swiggy.wallet.requestModels.TransactionRequestModel;
 import com.swiggy.wallet.requestModels.UserRequestModel;
 import com.swiggy.wallet.responseModels.ResponseMessageModel;
 import com.swiggy.wallet.services.UserService;
@@ -31,6 +28,12 @@ public class UserController {
     public ResponseEntity<ResponseMessageModel> deleteUser() throws UserNotFoundException {
         String response = userService.delete();
         return new ResponseEntity<>(new ResponseMessageModel(response), HttpStatus.ACCEPTED);
+    }
+
+    @PutMapping("/{user_id}/wallet")
+    public ResponseEntity<User> addWallet(@PathVariable("user_id") int userId) throws UserNotFoundException {
+        User returnedUser = userService.addWallet(userId);
+        return new ResponseEntity<>(returnedUser, HttpStatus.CREATED);
     }
 
 }

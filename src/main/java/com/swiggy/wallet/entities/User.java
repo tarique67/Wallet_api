@@ -1,8 +1,12 @@
 package com.swiggy.wallet.entities;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.swiggy.wallet.enums.Country;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @Entity
@@ -21,12 +25,17 @@ public class User {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    private Wallet wallet;
+    @Enumerated(EnumType.STRING)
+    private Country country;
 
-    public User(String userName, String password) {
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "USERID")
+    private List<Wallet> wallets = new ArrayList<>();
+
+    public User(String userName, String password, Country country) {
         this.userName = userName;
         this.password = password;
-        this.wallet = new Wallet();
+        this.country = country;
+        this.wallets.add(new Wallet(country));
     }
 }
