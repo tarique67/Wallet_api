@@ -2,6 +2,7 @@ package com.swiggy.wallet;
 
 import com.swiggy.wallet.entities.User;
 import com.swiggy.wallet.enums.Country;
+import com.swiggy.wallet.enums.Currency;
 import com.swiggy.wallet.exceptions.UserAlreadyExistsException;
 import com.swiggy.wallet.exceptions.UserNotFoundException;
 import com.swiggy.wallet.repository.UserDAO;
@@ -142,6 +143,7 @@ public class UserServiceTest {
         verify(userDao, times(2)).findByUserName(username);
         verify(userDao, times(2)).save(user);
         assertEquals(2, user.getWallets().size() );
+        assertEquals(Currency.INR, user.getWallets().get(1).getMoney().getCurrency() );
     }
 
     @Test

@@ -32,6 +32,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static com.swiggy.wallet.constants.Constants.SERVICE_CHARGE_IN_INR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
@@ -89,6 +90,57 @@ public class TransactionServiceTest {
         verify(receiverWallet, times(1)).deposit(requestModel.getMoney());
         verify(userDao, times(1)).save(sender);
         verify(userDao, times(1)).save(receiver);
+    }
+
+    @Test
+    void expectServiceChargeDeductedOnTransaction() throws InvalidAmountException, UserNotFoundException, SameWalletsForTransactionException, WalletNotFoundException, InsufficientBalanceException {
+        Wallet senderWallet = spy(new Wallet(1, new Money(0, Currency.INR)));
+        Wallet receiverWallet = spy(new Wallet(2, new Money(0, Currency.USD)));
+        senderWallet.deposit(new Money(100.0,Currency.INR));
+        User sender = new User(1,"sender", "senderPassword", Country.INDIA, Arrays.asList(senderWallet));
+        User receiver = new User(2,"receiver", "receiverPassword", Country.INDIA, Arrays.asList(receiverWallet));
+        Money moneyToTransact = new Money(100.0, Currency.INR);
+        Money moneyAfterServiceChargeCut = new Money(90.0, Currency.INR);
+        TransactionRequestModel requestModel = spy(new TransactionRequestModel(1,"receiver", 2, moneyToTransact));
+        when(authentication.getName()).thenReturn("sender");
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        when(userDao.findByUserName("sender")).thenReturn(Optional.of(sender));
+        when(userDao.findByUserName("receiver")).thenReturn(Optional.of(receiver));
+        when(walletDao.findById(1)).thenReturn(Optional.of(senderWallet));
+        when(walletDao.findById(2)).thenReturn(Optional.of(receiverWallet));
+
+        transactionService.transact(requestModel);
+
+        verify(senderWallet, times(1)).deposit(new Money(100.0,Currency.INR));
+        verify(senderWallet, times(1)).withdraw(moneyToTransact);
+        verify(receiverWallet, times(1)).deposit(moneyAfterServiceChargeCut);
+        verify(userDao, times(1)).save(sender);
+        verify(userDao, times(1)).save(receiver);
+    }
+
+    @Test
+    void expectExceptionWhenTransferAmountLessThanServiceCharge() throws InvalidAmountException, UserNotFoundException, SameWalletsForTransactionException, WalletNotFoundException, InsufficientBalanceException {
+        Wallet senderWallet = spy(new Wallet(1, new Money(0, Currency.INR)));
+        Wallet receiverWallet = spy(new Wallet(2, new Money(0, Currency.USD)));
+        senderWallet.deposit(new Money(100.0,Currency.INR));
+        User sender = new User(1,"sender", "senderPassword", Country.INDIA, Arrays.asList(senderWallet));
+        User receiver = new User(2,"receiver", "receiverPassword", Country.INDIA, Arrays.asList(receiverWallet));
+        Money moneyToTransact = new Money(9.0, Currency.INR);
+        TransactionRequestModel requestModel = spy(new TransactionRequestModel(1,"receiver", 2, moneyToTransact));
+        when(authentication.getName()).thenReturn("sender");
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        when(userDao.findByUserName("sender")).thenReturn(Optional.of(sender));
+        when(userDao.findByUserName("receiver")).thenReturn(Optional.of(receiver));
+        when(walletDao.findById(1)).thenReturn(Optional.of(senderWallet));
+        when(walletDao.findById(2)).thenReturn(Optional.of(receiverWallet));
+
+        assertThrows(InvalidAmountException.class, ()-> transactionService.transact(requestModel));
+        verify(senderWallet, never()).withdraw(any());
+        verify(receiverWallet, never()).deposit(any());
+        verify(userDao, never()).save(sender);
+        verify(userDao, never()).save(receiver);
     }
 
     @Test
@@ -170,7 +222,7 @@ public class TransactionServiceTest {
         Wallet secondSenderWallet = spy(new Wallet(2, new Money(0, Currency.INR)));
         firstSenderWallet.deposit(new Money(100.0,Currency.INR));
         User sender = new User(1,"sender", "senderPassword", Country.INDIA, Arrays.asList(firstSenderWallet, secondSenderWallet));
-        TransactionRequestModel requestModel = spy(new TransactionRequestModel(1,"sender", 2, new Money(100.0, Currency.INR)));
+        TransactionRequestModel requestModel = spy(new TransactionRequestModel(1,"sender", 2, new Money(90.0, Currency.INR)));
         when(authentication.getName()).thenReturn("sender");
         when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
@@ -180,7 +232,7 @@ public class TransactionServiceTest {
 
         transactionService.transact(requestModel);
 
-        verify(firstSenderWallet, times(1)).deposit(requestModel.getMoney());
+        verify(firstSenderWallet, times(1)).deposit(new Money(100.0,Currency.INR));
         verify(firstSenderWallet, times(1)).withdraw(requestModel.getMoney());
         verify(secondSenderWallet, times(1)).deposit(requestModel.getMoney());
         verify(userDao, times(2)).save(sender);
@@ -195,8 +247,8 @@ public class TransactionServiceTest {
         SecurityContextHolder.setContext(securityContext);
         Wallet senderWallet = new Wallet(1, new Money(1000.0, Currency.INR));
         Wallet receiverWallet = new Wallet(2, new Money(0, Currency.INR));
-        Transaction firstTransaction = new Transaction(LocalDateTime.now(), new Money(100, Currency.INR), sender, 1, receiver, 2);
-        Transaction secondTransaction = new Transaction(LocalDateTime.now(),new Money(200, Currency.INR), sender, 1,receiver, 2);
+        Transaction firstTransaction = new Transaction(LocalDateTime.now(), new Money(100, Currency.INR), sender, 1, receiver, 2, new Money(0, Currency.INR));
+        Transaction secondTransaction = new Transaction(LocalDateTime.now(),new Money(200, Currency.INR), sender, 1,receiver, 2, new Money(0, Currency.INR));
         List<Transaction> transactions = Arrays.asList(firstTransaction, secondTransaction);
         when(userDao.findByUserName("sender")).thenReturn(Optional.of(sender));
         when(transactionDao.findTransactionsOfUser(sender)).thenReturn(transactions);
@@ -216,7 +268,7 @@ public class TransactionServiceTest {
         LocalDateTime endDate = LocalDate.of(2022, 1, 31).atTime(23, 59, 59);
         Wallet senderWallet = new Wallet(1, new Money(1000.0, Currency.INR));
         Wallet receiverWallet = new Wallet(2, new Money(0, Currency.INR));
-        Transaction transaction = new Transaction(LocalDateTime.now(), new Money(100, Currency.INR) , sender, 1, receiver, 2);
+        Transaction transaction = new Transaction(LocalDateTime.now(), new Money(100, Currency.INR) , sender, 1, receiver, 2, new Money(0, Currency.INR));
         List<Transaction> transactions = new ArrayList<>();
         transactions.add(transaction);
         when(authentication.getName()).thenReturn("sender");
@@ -237,10 +289,8 @@ public class TransactionServiceTest {
         User receiver = new User("receiver", "receiverPassword", Country.INDIA);
         LocalDateTime startDate = LocalDate.of(2022, 1, 1).atStartOfDay();
         LocalDateTime endDate = LocalDate.of(2022, 1, 31).atTime(23, 59, 59);
-        Wallet senderWallet = new Wallet(1, new Money(1000.0, Currency.INR));
-        Wallet receiverWallet = new Wallet(2, new Money(0, Currency.INR));
-        Transaction firstTransaction = new Transaction(LocalDateTime.now(), new Money(100, Currency.INR) , sender, 1, receiver, 2);
-        Transaction secondTransaction = new Transaction(LocalDateTime.now().minusDays(2), new Money(100, Currency.INR) , sender, 1, receiver, 2);
+        Transaction firstTransaction = new Transaction(LocalDateTime.now(), new Money(100, Currency.INR) , sender, 1, receiver, 2, new Money(0, Currency.INR));
+        Transaction secondTransaction = new Transaction(LocalDateTime.now().minusDays(2), new Money(100, Currency.INR) , sender, 1, receiver, 2, new Money(0, Currency.INR));
         List<Transaction> allTransactions = new ArrayList<>();
         allTransactions.add(firstTransaction);
         allTransactions.add(secondTransaction);
@@ -261,4 +311,5 @@ public class TransactionServiceTest {
         verify(transactionDao, times(1)).findTransactionsOfUser(sender);
         verify(transactionDao, times(1)).findTransactionsOfUserDateBased(sender,startDate, endDate);
     }
+
 }

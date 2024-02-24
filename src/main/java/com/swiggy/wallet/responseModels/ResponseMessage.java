@@ -15,4 +15,5 @@ public class ResponseMessage {
     public static final String SENDER_WALLET_NOT_FOUND = "Sender wallet not found.";
     public static final String RECEIVER_WALLET_NOT_FOUND = "Receiver wallet not found.";
     public static final String WALLETS_SAME_IN_TRANSACTION = "Sender and receiver wallets cannot be same for a transaction.";
+    public static final String AMOUNT_LESS_THAN_SERVICE_CHARGE = "Amount less than service charge.";
 }

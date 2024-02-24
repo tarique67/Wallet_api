@@ -1,8 +1,10 @@
 package com.swiggy.wallet.services;
 
+import com.swiggy.wallet.entities.Money;
 import com.swiggy.wallet.entities.Transaction;
 import com.swiggy.wallet.entities.User;
 import com.swiggy.wallet.entities.Wallet;
+import com.swiggy.wallet.enums.Currency;
 import com.swiggy.wallet.exceptions.*;
 import com.swiggy.wallet.repository.TransactionDAO;
 import com.swiggy.wallet.repository.UserDAO;
@@ -19,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.swiggy.wallet.constants.Constants.SERVICE_CHARGE_IN_INR;
 import static com.swiggy.wallet.responseModels.ResponseMessage.*;
 
 @Service
@@ -42,7 +45,7 @@ public class TransactionServicesImpl implements TransactionService{
         User user = userDao.findByUserName(username).orElseThrow(()-> new UsernameNotFoundException("Username not found."));
 
         List<Transaction> transactions = transactionDao.findTransactionsOfUser(user);
-        List<TransactionsResponseModel> response = transactions.stream().map((transaction -> new TransactionsResponseModel(transaction.getTimestamp(), transaction.getSender().getUserName(), transaction.getSenderWalletId(), transaction.getReceiver().getUserName(), transaction.getReceiverWalletId(), transaction.getMoney()))).collect(Collectors.toList());
+        List<TransactionsResponseModel> response = transactions.stream().map((transaction -> new TransactionsResponseModel(transaction.getTimestamp(), transaction.getSender().getUserName(), transaction.getSenderWalletId(), transaction.getReceiver().getUserName(), transaction.getReceiverWalletId(), transaction.getMoney(), transaction.getServiceCharge()))).collect(Collectors.toList());
 
         return response;
     }
@@ -53,7 +56,7 @@ public class TransactionServicesImpl implements TransactionService{
         User user = userDao.findByUserName(username).orElseThrow(()-> new UsernameNotFoundException("Username not found."));
 
         List<Transaction> transactions = transactionDao.findTransactionsOfUserDateBased(user,startDate.atTime(0,0,0), endDate.atTime(23,59,59));
-        List<TransactionsResponseModel> response = transactions.stream().map((transaction -> new TransactionsResponseModel(transaction.getTimestamp(), transaction.getSender().getUserName(), transaction.getSenderWalletId(), transaction.getReceiver().getUserName(), transaction.getReceiverWalletId(), transaction.getMoney()))).collect(Collectors.toList());
+        List<TransactionsResponseModel> response = transactions.stream().map((transaction -> new TransactionsResponseModel(transaction.getTimestamp(), transaction.getSender().getUserName(), transaction.getSenderWalletId(), transaction.getReceiver().getUserName(), transaction.getReceiverWalletId(), transaction.getMoney(), transaction.getServiceCharge()))).collect(Collectors.toList());
 
         return response;
     }
@@ -71,12 +74,23 @@ public class TransactionServicesImpl implements TransactionService{
         if(senderWallet.equals(receiverWallet))
             throw new SameWalletsForTransactionException(WALLETS_SAME_IN_TRANSACTION);
 
+        double serviceCharge = 0;
+        if(requestModel.getMoney().getCurrency() != receiverWallet.getMoney().getCurrency() || requestModel.getMoney().getCurrency() != senderWallet.getMoney().getCurrency())
+            serviceCharge = SERVICE_CHARGE_IN_INR.getAmount() / requestModel.getMoney().getCurrency().getConversionFactor();
+
+        if(serviceCharge >= requestModel.getMoney().getAmount())
+            throw new InvalidAmountException(AMOUNT_LESS_THAN_SERVICE_CHARGE);
+
         senderWallet.withdraw(requestModel.getMoney());
+
+        if(serviceCharge > 0.0)
+            requestModel.getMoney().subtract(new Money(serviceCharge, requestModel.getMoney().getCurrency()));
+
         receiverWallet.deposit(requestModel.getMoney());
 
         userDao.save(sender);
         userDao.save(receiver);
-        Transaction transaction = new Transaction(LocalDateTime.now(),requestModel.getMoney(), sender, senderWallet.getWalletId(), receiver, receiverWallet.getWalletId());
+        Transaction transaction = new Transaction(LocalDateTime.now(),requestModel.getMoney(), sender, senderWallet.getWalletId(), receiver, receiverWallet.getWalletId(), SERVICE_CHARGE_IN_INR);
         transactionDao.save(transaction);
 
         return TRANSACTION_SUCCESSFUL;

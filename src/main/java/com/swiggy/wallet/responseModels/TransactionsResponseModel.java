@@ -18,4 +18,5 @@ public class TransactionsResponseModel {
     private String receiver;
     private int receiverWalletId;
     private Money money;
+    private Money serviceCharge;
 }
