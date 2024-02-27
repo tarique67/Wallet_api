@@ -1,5 +1,6 @@
 package com.swiggy.wallet.services;
 
+import com.swiggy.wallet.currencyConverterGrpcClient.CurrencyConverter;
 import com.swiggy.wallet.entities.Money;
 import com.swiggy.wallet.entities.Transaction;
 import com.swiggy.wallet.entities.User;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import proto.ConvertResponse;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -74,9 +76,12 @@ public class TransactionServicesImpl implements TransactionService{
         if(senderWallet.equals(receiverWallet))
             throw new SameWalletsForTransactionException(WALLETS_SAME_IN_TRANSACTION);
 
-        double serviceCharge = 0;
-        if(requestModel.getMoney().getCurrency() != receiverWallet.getMoney().getCurrency() || requestModel.getMoney().getCurrency() != senderWallet.getMoney().getCurrency())
-            serviceCharge = SERVICE_CHARGE_IN_INR.getAmount() / requestModel.getMoney().getCurrency().getConversionFactor();
+        CurrencyConverter converter = new CurrencyConverter();
+        ConvertResponse res = converter.convertMoney(requestModel.getMoney(), senderWallet.getMoney().getCurrency(), receiverWallet.getMoney().getCurrency());
+
+        double serviceCharge = res.getServiceCharge().getAmount();
+//        if(requestModel.getMoney().getCurrency() != receiverWallet.getMoney().getCurrency() || requestModel.getMoney().getCurrency() != senderWallet.getMoney().getCurrency())
+//            serviceCharge = SERVICE_CHARGE_IN_INR.getAmount() / requestModel.getMoney().getCurrency().getConversionFactor();
 
         if(serviceCharge >= requestModel.getMoney().getAmount())
             throw new InvalidAmountException(AMOUNT_LESS_THAN_SERVICE_CHARGE);

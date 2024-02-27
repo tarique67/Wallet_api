@@ -60,8 +60,8 @@ public class WalletServiceTest {
 
     @Test
     void expectAmountDepositedWithValidAmount() throws Exception {
-        User user = spy(new User("testUser", "testPassword", Country.INDIA));
-        Wallet wallet = new Wallet(1, new Money(0.0, Currency.INR));
+        Wallet wallet = spy(new Wallet(1, new Money(0.0, Currency.INR)));
+        User user = spy(new User(1,"testUser", "testPassword", Country.INDIA, Arrays.asList(wallet)));
         when(userDao.findByUserName("testUser")).thenReturn(Optional.of(user));
         when(walletDao.findById(1)).thenReturn(Optional.of(wallet));
         when(user.getWallets()).thenReturn(Arrays.asList(wallet));
@@ -69,6 +69,7 @@ public class WalletServiceTest {
 
         walletService.deposit(1, "testUser", requestModel);
 
+        verify(wallet, times(1)).deposit(new Money(100,Currency.INR));
         verify(walletDao, times(1)).findById(1);
         verify(walletDao, times(1)).save(wallet);
     }

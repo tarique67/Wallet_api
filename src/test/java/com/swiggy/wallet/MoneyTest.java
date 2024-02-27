@@ -1,14 +1,20 @@
 package com.swiggy.wallet;
 
+import com.swiggy.wallet.currencyConverterGrpcClient.CurrencyConverter;
 import com.swiggy.wallet.entities.Money;
 import com.swiggy.wallet.enums.Currency;
 import com.swiggy.wallet.exceptions.InsufficientBalanceException;
 import com.swiggy.wallet.exceptions.InvalidAmountException;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class MoneyTest {
+
+    @MockBean
+    private CurrencyConverter converter;
 
     @Test
     void expectMoneyCreated() {
@@ -18,6 +24,7 @@ public class MoneyTest {
     @Test
     void expectMoney100Added() throws InvalidAmountException {
         Money money = new Money(0,Currency.INR);
+
 
         money.add(new Money(100, Currency.INR));
 

@@ -1,0 +1,26 @@
+syntax="proto3";
+
+option java_multiple_files = true;
+package proto;
+ 
+option go_package="wallet/currency-converter";
+ 
+ 
+message Money {
+   string currency =1;
+   float amount =2;
+}
+ 
+message ConvertRequest {
+   Money money = 1;
+   string sourceCurrency =2;
+   string targetCurrency =3;
+}
+message ConvertResponse {
+   Money money =1;
+   Money serviceCharge =2;
+}
+ 
+service ConverterService {
+   rpc ConvertMoney(ConvertRequest) returns (ConvertResponse) {}
+}
