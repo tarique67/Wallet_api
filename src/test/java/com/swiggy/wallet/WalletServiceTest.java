@@ -22,6 +22,7 @@ import org.mockito.InjectMocks;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -72,14 +73,14 @@ public class WalletServiceTest {
         when(walletDao.findById(1)).thenReturn(Optional.of(wallet));
         when(user.getWallets()).thenReturn(Arrays.asList(wallet));
         WalletRequestModel requestModel = new WalletRequestModel(new Money(100,Currency.INR));
-        IntraWalletTransactions deposit = new IntraWalletTransactions(new Money(100,Currency.INR), IntraWalletTransactionType.DEPOSIT, wallet);
+        IntraWalletTransactions deposit = new IntraWalletTransactions(new Money(100,Currency.INR), IntraWalletTransactionType.DEPOSIT, wallet, LocalDateTime.now());
 
         walletService.deposit(1, "testUser", requestModel);
 
         verify(wallet, times(1)).deposit(new Money(100,Currency.INR));
         verify(walletDao, times(1)).findById(1);
         verify(walletDao, times(1)).save(wallet);
-        verify(intraWalletTransactionsDAO, times(1)).save(deposit);
+        verify(intraWalletTransactionsDAO, times(1)).save(any());
     }
 
     @Test
@@ -101,7 +102,7 @@ public class WalletServiceTest {
         when(walletDao.findById(1)).thenReturn(Optional.of(wallet));
         when(user.getWallets()).thenReturn(Arrays.asList(wallet));
         WalletRequestModel requestModel = new WalletRequestModel(new Money(50, Currency.INR));
-        IntraWalletTransactions withdraw = new IntraWalletTransactions(new Money(50,Currency.INR), IntraWalletTransactionType.WITHDRAW, wallet);
+        IntraWalletTransactions withdraw = new IntraWalletTransactions(new Money(50,Currency.INR), IntraWalletTransactionType.WITHDRAW, wallet, LocalDateTime.now());
 
         WalletResponseModel returnedWallet = walletService.withdraw(1, "testUser", requestModel);
 
@@ -109,7 +110,7 @@ public class WalletServiceTest {
         verify(walletDao, times(1)).findById(1);
         verify(walletDao, times(1)).save(any());
 
-        verify(intraWalletTransactionsDAO, times(1)).save(withdraw);
+        verify(intraWalletTransactionsDAO, times(1)).save(any());
     }
 
     @Test

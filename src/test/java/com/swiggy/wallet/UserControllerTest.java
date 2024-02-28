@@ -8,7 +8,6 @@ import com.swiggy.wallet.enums.Country;
 import com.swiggy.wallet.enums.Currency;
 import com.swiggy.wallet.exceptions.UserAlreadyExistsException;
 import com.swiggy.wallet.exceptions.UserNotFoundException;
-import com.swiggy.wallet.requestModels.TransactionRequestModel;
 import com.swiggy.wallet.requestModels.UserRequestModel;
 import com.swiggy.wallet.services.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,10 +20,8 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 
-import static com.swiggy.wallet.responseModels.ResponseMessage.TRANSACTION_SUCCESSFUL;
 import static com.swiggy.wallet.responseModels.ResponseMessage.USER_DELETED_SUCCESSFULLY;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;

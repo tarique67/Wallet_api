@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Transaction {
+public class InterWalletTransaction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -44,7 +44,7 @@ public class Transaction {
     @OneToOne(cascade = CascadeType.ALL)
     private IntraWalletTransactions withdraw;
 
-    public Transaction(LocalDateTime timestamp, Money money, User sender, int senderWalletId, User receiver, int receiverWalletId, Money serviceCharge) {
+    public InterWalletTransaction(LocalDateTime timestamp, Money money, User sender, int senderWalletId, User receiver, int receiverWalletId, Money serviceCharge) {
         this.timestamp = timestamp;
         this.money = money;
         this.sender = sender;
@@ -54,7 +54,7 @@ public class Transaction {
         this.serviceCharge = serviceCharge;
     }
 
-    public Transaction(LocalDateTime timestamp, Money money, User sender, int senderWalletId, User receiver, int receiverWalletId, Money serviceCharge, IntraWalletTransactions deposit, IntraWalletTransactions withdraw) {
+    public InterWalletTransaction(LocalDateTime timestamp, Money money, User sender, int senderWalletId, User receiver, int receiverWalletId, Money serviceCharge, IntraWalletTransactions deposit, IntraWalletTransactions withdraw) {
         this.timestamp = timestamp;
         this.money = money;
         this.sender = sender;

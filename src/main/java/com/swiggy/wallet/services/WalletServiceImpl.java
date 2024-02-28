@@ -16,6 +16,7 @@ import com.swiggy.wallet.repository.WalletDAO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,7 +59,7 @@ public class WalletServiceImpl implements WalletService {
         wallet.deposit(requestModel.getMoney());
 
         walletDao.save(wallet);
-        intraWalletTransactionsDAO.save(new IntraWalletTransactions(requestModel.getMoney(), IntraWalletTransactionType.DEPOSIT, wallet));
+        intraWalletTransactionsDAO.save(new IntraWalletTransactions(requestModel.getMoney(), IntraWalletTransactionType.DEPOSIT, wallet, LocalDateTime.now()));
         return new WalletResponseModel(walletId, wallet.getMoney());
     }
 
@@ -72,7 +73,7 @@ public class WalletServiceImpl implements WalletService {
         wallet.withdraw(requestModel.getMoney());
 
         walletDao.save(wallet);
-        intraWalletTransactionsDAO.save(new IntraWalletTransactions(requestModel.getMoney(), IntraWalletTransactionType.WITHDRAW, wallet));
+        intraWalletTransactionsDAO.save(new IntraWalletTransactions(requestModel.getMoney(), IntraWalletTransactionType.WITHDRAW, wallet, LocalDateTime.now()));
         return new WalletResponseModel(walletId, wallet.getMoney());
     }
 

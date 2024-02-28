@@ -6,7 +6,7 @@ import com.swiggy.wallet.enums.Currency;
 import com.swiggy.wallet.enums.IntraWalletTransactionType;
 import com.swiggy.wallet.exceptions.InsufficientBalanceException;
 import com.swiggy.wallet.exceptions.InvalidAmountException;
-import com.swiggy.wallet.requestModels.TransactionRequestModel;
+import com.swiggy.wallet.requestModels.InterWalletTransactionRequestModel;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -41,7 +41,7 @@ public class Wallet {
         this.money.subtract(money);
     }
 
-    public Transaction transact(TransactionRequestModel requestModel, User sender, Wallet receiverWallet, User receiver) throws InsufficientBalanceException, InvalidAmountException {
+    public InterWalletTransaction transact(InterWalletTransactionRequestModel requestModel, User sender, Wallet receiverWallet, User receiver) throws InsufficientBalanceException, InvalidAmountException {
         ConvertResponse res = CurrencyConverter.convertMoney(requestModel.getMoney(), this.getMoney().getCurrency(), receiverWallet.getMoney().getCurrency());
 
         double serviceCharge = res.getServiceCharge().getAmount();
@@ -50,14 +50,14 @@ public class Wallet {
             throw new InvalidAmountException(AMOUNT_LESS_THAN_SERVICE_CHARGE);
 
         this.withdraw(requestModel.getMoney());
-        IntraWalletTransactions withdrawTransaction = new IntraWalletTransactions(new Money(requestModel.getMoney().getAmount(), requestModel.getMoney().getCurrency()), IntraWalletTransactionType.WITHDRAW, this);
+        IntraWalletTransactions withdrawTransaction = new IntraWalletTransactions(new Money(requestModel.getMoney().getAmount(), requestModel.getMoney().getCurrency()), IntraWalletTransactionType.WITHDRAW, this, LocalDateTime.now());
 
         if(serviceCharge > 0.0)
             requestModel.getMoney().subtract(new Money(serviceCharge, receiverWallet.getMoney().getCurrency()));
 
         receiverWallet.deposit(requestModel.getMoney());
-        IntraWalletTransactions depositTransaction = new IntraWalletTransactions(requestModel.getMoney(), IntraWalletTransactionType.DEPOSIT,receiverWallet);
+        IntraWalletTransactions depositTransaction = new IntraWalletTransactions(requestModel.getMoney(), IntraWalletTransactionType.DEPOSIT,receiverWallet, LocalDateTime.now());
 
-        return new Transaction(LocalDateTime.now(),requestModel.getMoney(), sender, this.getWalletId(), receiver, receiverWallet.getWalletId(), new Money(res.getServiceCharge().getAmount(), Currency.valueOf(res.getServiceCharge().getCurrency())), depositTransaction, withdrawTransaction);
+        return new InterWalletTransaction(LocalDateTime.now(),requestModel.getMoney(), sender, this.getWalletId(), receiver, receiverWallet.getWalletId(), new Money(res.getServiceCharge().getAmount(), Currency.valueOf(res.getServiceCharge().getCurrency())), depositTransaction, withdrawTransaction);
     }
 }

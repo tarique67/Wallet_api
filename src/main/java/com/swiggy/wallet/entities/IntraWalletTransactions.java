@@ -28,10 +28,10 @@ public class IntraWalletTransactions {
 
     private LocalDateTime timestamp;
 
-    public IntraWalletTransactions(Money money, IntraWalletTransactionType type, Wallet wallet) {
+    public IntraWalletTransactions(Money money, IntraWalletTransactionType type, Wallet wallet, LocalDateTime timestamp) {
         this.money = money;
         this.type = type;
         this.wallet = wallet;
-        this.timestamp = LocalDateTime.now();
+        this.timestamp = timestamp;
     }
 }
