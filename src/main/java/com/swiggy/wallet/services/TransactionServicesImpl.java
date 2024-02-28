@@ -80,8 +80,6 @@ public class TransactionServicesImpl implements TransactionService{
         ConvertResponse res = converter.convertMoney(requestModel.getMoney(), senderWallet.getMoney().getCurrency(), receiverWallet.getMoney().getCurrency());
 
         double serviceCharge = res.getServiceCharge().getAmount();
-//        if(requestModel.getMoney().getCurrency() != receiverWallet.getMoney().getCurrency() || requestModel.getMoney().getCurrency() != senderWallet.getMoney().getCurrency())
-//            serviceCharge = SERVICE_CHARGE_IN_INR.getAmount() / requestModel.getMoney().getCurrency().getConversionFactor();
 
         if(serviceCharge >= requestModel.getMoney().getAmount())
             throw new InvalidAmountException(AMOUNT_LESS_THAN_SERVICE_CHARGE);

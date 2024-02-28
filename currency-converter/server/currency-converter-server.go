@@ -11,24 +11,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-type Currency string
-
-const (
-	INR Currency = "INR"
-	USD Currency = "USD"
-	EUR Currency = "EUR"
-)
-
-var ConversionFactorMap = map[Currency]float32{
-	INR: 1.0,
-	USD: 83.10,
-	EUR: 89.04,
-}
-
-func (c Currency) GetConversionFactor() float32 {
-	return ConversionFactorMap[c]
-}
-
 type server struct {
 	pb.UnimplementedConverterServiceServer
 }
@@ -39,6 +21,18 @@ func (s *server) ConvertMoney(ctx context.Context, req *pb.ConvertRequest) (*pb.
 	amount := req.Money.Amount
 	targetCurrency := req.TargetCurrency
 	sourceCurrency := req.SourceCurrency
+
+    if _, ok := ConversionFactorMap[Currency(currency)]; !ok {
+        return &pb.ConvertResponse{}, fmt.Errorf("unsupported currency: %s", currency)
+    }
+
+	if _, ok := ConversionFactorMap[Currency(targetCurrency)]; !ok {
+        return &pb.ConvertResponse{}, fmt.Errorf("unsupported currency: %s", currency)
+    }
+
+	if _, ok := ConversionFactorMap[Currency(sourceCurrency)]; !ok {
+        return &pb.ConvertResponse{}, fmt.Errorf("unsupported currency: %s", currency)
+    }
 
 	convertedAmount := amount
 	serviceCharge := &pb.Money{Currency: "INR", Amount: 0.0}

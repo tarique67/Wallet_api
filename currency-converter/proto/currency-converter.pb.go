@@ -147,21 +147,6 @@ type ConvertResponse struct {
 	ServiceCharge *Money `protobuf:"bytes,2,opt,name=serviceCharge,proto3" json:"serviceCharge,omitempty"`
 }
 
-// Fail implements assert.TestingT.
-func (*ConvertResponse) Fail() {
-	panic("unimplemented")
-}
-
-// FailNow implements assert.TestingT.
-func (*ConvertResponse) FailNow() {
-	panic("unimplemented")
-}
-
-// Log implements assert.TestingT.
-func (*ConvertResponse) Log(args ...interface{}) {
-	panic("unimplemented")
-}
-
 func (x *ConvertResponse) Reset() {
 	*x = ConvertResponse{}
 	if protoimpl.UnsafeEnabled {
