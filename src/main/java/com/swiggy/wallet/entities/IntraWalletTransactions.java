@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Data
 @NoArgsConstructor
@@ -24,9 +26,12 @@ public class IntraWalletTransactions {
     @ManyToOne(cascade = CascadeType.ALL)
     private Wallet wallet;
 
+    private LocalDateTime timestamp;
+
     public IntraWalletTransactions(Money money, IntraWalletTransactionType type, Wallet wallet) {
         this.money = money;
         this.type = type;
         this.wallet = wallet;
+        this.timestamp = LocalDateTime.now();
     }
 }

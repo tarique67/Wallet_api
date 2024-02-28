@@ -53,7 +53,7 @@ public class TransactionControllerTest {
         String requestJson = objectMapper.writeValueAsString(transactionRequestModel);
         when(transactionService.transact(transactionRequestModel)).thenReturn(TRANSACTION_SUCCESSFUL);
 
-        mockMvc.perform(post("/api/v1/transactions/transact")
+        mockMvc.perform(post("/api/v1/transactions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isAccepted())
@@ -68,7 +68,7 @@ public class TransactionControllerTest {
         String requestJson = objectMapper.writeValueAsString(transactionRequestModel);
         when(transactionService.transact(transactionRequestModel)).thenThrow(new SameWalletsForTransactionException(WALLETS_SAME_IN_TRANSACTION));
 
-        mockMvc.perform(post("/api/v1/transactions/transact")
+        mockMvc.perform(post("/api/v1/transactions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isBadRequest())

@@ -78,26 +78,10 @@ public class TransactionServicesImpl implements TransactionService{
         if(senderWallet.equals(receiverWallet))
             throw new SameWalletsForTransactionException(WALLETS_SAME_IN_TRANSACTION);
 
-        CurrencyConverter converter = new CurrencyConverter();
-        ConvertResponse res = converter.convertMoney(requestModel.getMoney(), senderWallet.getMoney().getCurrency(), receiverWallet.getMoney().getCurrency());
-
-        double serviceCharge = res.getServiceCharge().getAmount();
-
-        if(serviceCharge >= res.getMoney().getAmount())
-            throw new InvalidAmountException(AMOUNT_LESS_THAN_SERVICE_CHARGE);
-
-        senderWallet.withdraw(requestModel.getMoney());
-        IntraWalletTransactions withdrawTransaction = new IntraWalletTransactions(new Money(requestModel.getMoney().getAmount(), requestModel.getMoney().getCurrency()), IntraWalletTransactionType.WITHDRAW, senderWallet);
-
-        if(serviceCharge > 0.0)
-            requestModel.getMoney().subtract(new Money(serviceCharge, receiverWallet.getMoney().getCurrency()));
-
-        receiverWallet.deposit(requestModel.getMoney());
-        IntraWalletTransactions depositTransaction = new IntraWalletTransactions(requestModel.getMoney(), IntraWalletTransactionType.DEPOSIT,receiverWallet);
+        Transaction transaction = senderWallet.transact(requestModel, sender, receiverWallet, receiver);
 
         userDao.save(sender);
         userDao.save(receiver);
-        Transaction transaction = new Transaction(LocalDateTime.now(),requestModel.getMoney(), sender, senderWallet.getWalletId(), receiver, receiverWallet.getWalletId(), new Money(res.getServiceCharge().getAmount(), Currency.valueOf(res.getServiceCharge().getCurrency())), depositTransaction, withdrawTransaction);
         transactionDao.save(transaction);
 
         return TRANSACTION_SUCCESSFUL;

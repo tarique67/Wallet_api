@@ -12,14 +12,14 @@ import proto.ConverterServiceGrpc;
 public class CurrencyConverter {
 
 //    @Value("${converter.grpc.service.host}")
-    private final String converterHost = "localhost";
+    private static final String converterHost = "localhost";
 
 //    @Value("${converter.grpc.service.port}")
-    private final int port = 8090;
+    private static final int port = 8090;
 
 
 
-    public ConvertResponse convertMoney(Money money, Currency sourceCurrency, Currency targetCurrency){
+    public static ConvertResponse convertMoney(Money money, Currency sourceCurrency, Currency targetCurrency){
         ManagedChannel channel = ManagedChannelBuilder.forAddress(converterHost, port)
                 .usePlaintext().build();
 

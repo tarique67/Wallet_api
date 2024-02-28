@@ -21,7 +21,7 @@ public class TransactionController {
     @Autowired
     private TransactionService transactionService;
 
-    @PostMapping("/transact")
+    @PostMapping("")
     public ResponseEntity<ResponseMessageModel> transact(@RequestBody TransactionRequestModel transactionRequestModel) throws InsufficientBalanceException, InvalidAmountException, UserNotFoundException, WalletNotFoundException, SameWalletsForTransactionException {
         String response = transactionService.transact(transactionRequestModel);
         return new ResponseEntity<>(new ResponseMessageModel(response), HttpStatus.ACCEPTED);

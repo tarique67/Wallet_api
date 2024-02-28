@@ -79,7 +79,7 @@ public class WalletControllerTest {
         WalletResponseModel responseModel = new WalletResponseModel(1, new Money(50, Currency.INR));
         when(walletService.withdraw(anyInt(), anyString(), any())).thenReturn(responseModel);
 
-        mockMvc.perform(put("/api/v1/wallets/1/withdraw")
+        mockMvc.perform(put("/api/v1/wallets/1/withdrawal")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isAccepted())
@@ -92,7 +92,7 @@ public class WalletControllerTest {
         WalletRequestModel requestModel = new WalletRequestModel(new Money(50, Currency.INR));
         String requestBody = objectMapper.writeValueAsString(requestModel);
 
-        mockMvc.perform(put("/api/v1/wallets/withdraw")
+        mockMvc.perform(put("/api/v1/wallets/withdrawal")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isUnauthorized());

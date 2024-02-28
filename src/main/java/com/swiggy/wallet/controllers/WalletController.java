@@ -23,11 +23,6 @@ public class WalletController {
     @Autowired
     private WalletService walletService;
 
-    @GetMapping("/hello")
-    public ResponseEntity<String> sayHello(){
-        return new ResponseEntity<>("Hello", HttpStatus.OK);
-    }
-
     @PutMapping("/{wallet_id}/deposit")
     public ResponseEntity<WalletResponseModel> deposit(@PathVariable("wallet_id") int walletId, @RequestBody WalletRequestModel requestModel) throws InvalidAmountException, AuthenticationFailedException, WalletNotFoundException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -37,7 +32,7 @@ public class WalletController {
         return new ResponseEntity<>(returnedWallet, HttpStatus.ACCEPTED);
     }
 
-    @PutMapping("/{wallet_id}/withdraw")
+    @PutMapping("/{wallet_id}/withdrawal")
     public ResponseEntity<WalletResponseModel> withdraw(@PathVariable("wallet_id") int walletId,@RequestBody WalletRequestModel requestModel) throws InsufficientBalanceException, InvalidAmountException, AuthenticationFailedException, WalletNotFoundException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();

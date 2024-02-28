@@ -25,8 +25,7 @@ public class Money {
     private Currency currency;
 
     public void add(Money money) throws InvalidAmountException {
-        CurrencyConverter converter = new CurrencyConverter();
-        ConvertResponse res = converter.convertMoney(money, this.currency ,this.currency);
+        ConvertResponse res = CurrencyConverter.convertMoney(money, this.currency ,this.currency);
         if(res.getMoney().getAmount() <= 0)
             throw new InvalidAmountException(DEPOSIT_SHOULD_BE_GREATER_THAN_0);
 
@@ -34,8 +33,7 @@ public class Money {
     }
 
     public void subtract(Money money) throws InvalidAmountException, InsufficientBalanceException {
-        CurrencyConverter converter = new CurrencyConverter();
-        ConvertResponse res = converter.convertMoney(money, this.currency ,this.currency);
+        ConvertResponse res = CurrencyConverter.convertMoney(money, this.currency ,this.currency);
 
         if(res.getMoney().getAmount() > this.amount)
             throw new InsufficientBalanceException(INSUFFICIENT_BALANCE_EXCEPTION);
