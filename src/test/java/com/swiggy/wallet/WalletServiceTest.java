@@ -1,12 +1,15 @@
 package com.swiggy.wallet;
 
+import com.swiggy.wallet.entities.IntraWalletTransactions;
 import com.swiggy.wallet.entities.Money;
 import com.swiggy.wallet.entities.User;
 import com.swiggy.wallet.entities.Wallet;
 import com.swiggy.wallet.enums.Country;
+import com.swiggy.wallet.enums.IntraWalletTransactionType;
 import com.swiggy.wallet.exceptions.AuthenticationFailedException;
 import com.swiggy.wallet.exceptions.InsufficientBalanceException;
 import com.swiggy.wallet.exceptions.InvalidAmountException;
+import com.swiggy.wallet.repository.IntraWalletTransactionsDAO;
 import com.swiggy.wallet.repository.UserDAO;
 import com.swiggy.wallet.requestModels.WalletRequestModel;
 import com.swiggy.wallet.responseModels.WalletResponseModel;
@@ -39,6 +42,9 @@ public class WalletServiceTest {
     @MockBean
     private Wallet wallet;
 
+    @MockBean
+    private IntraWalletTransactionsDAO intraWalletTransactionsDAO;
+
     @InjectMocks
     private WalletServiceImpl walletService;
 
@@ -66,12 +72,14 @@ public class WalletServiceTest {
         when(walletDao.findById(1)).thenReturn(Optional.of(wallet));
         when(user.getWallets()).thenReturn(Arrays.asList(wallet));
         WalletRequestModel requestModel = new WalletRequestModel(new Money(100,Currency.INR));
+        IntraWalletTransactions deposit = new IntraWalletTransactions(new Money(100,Currency.INR), IntraWalletTransactionType.DEPOSIT, wallet);
 
         walletService.deposit(1, "testUser", requestModel);
 
         verify(wallet, times(1)).deposit(new Money(100,Currency.INR));
         verify(walletDao, times(1)).findById(1);
         verify(walletDao, times(1)).save(wallet);
+        verify(intraWalletTransactionsDAO, times(1)).save(deposit);
     }
 
     @Test
@@ -93,12 +101,15 @@ public class WalletServiceTest {
         when(walletDao.findById(1)).thenReturn(Optional.of(wallet));
         when(user.getWallets()).thenReturn(Arrays.asList(wallet));
         WalletRequestModel requestModel = new WalletRequestModel(new Money(50, Currency.INR));
+        IntraWalletTransactions withdraw = new IntraWalletTransactions(new Money(50,Currency.INR), IntraWalletTransactionType.WITHDRAW, wallet);
 
         WalletResponseModel returnedWallet = walletService.withdraw(1, "testUser", requestModel);
 
         assertEquals(50, returnedWallet.getMoney().getAmount());
         verify(walletDao, times(1)).findById(1);
         verify(walletDao, times(1)).save(any());
+
+        verify(intraWalletTransactionsDAO, times(1)).save(withdraw);
     }
 
     @Test

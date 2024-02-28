@@ -90,6 +90,7 @@ public class TransactionServiceTest {
         verify(receiverWallet, times(1)).deposit(requestModel.getMoney());
         verify(userDao, times(1)).save(sender);
         verify(userDao, times(1)).save(receiver);
+        verify(transactionDao, times(1)).save(any());
     }
 
     @Test

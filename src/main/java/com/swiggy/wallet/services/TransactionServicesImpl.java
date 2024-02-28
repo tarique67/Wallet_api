@@ -1,12 +1,11 @@
 package com.swiggy.wallet.services;
 
 import com.swiggy.wallet.currencyConverterGrpcClient.CurrencyConverter;
-import com.swiggy.wallet.entities.Money;
-import com.swiggy.wallet.entities.Transaction;
-import com.swiggy.wallet.entities.User;
-import com.swiggy.wallet.entities.Wallet;
+import com.swiggy.wallet.entities.*;
 import com.swiggy.wallet.enums.Currency;
+import com.swiggy.wallet.enums.IntraWalletTransactionType;
 import com.swiggy.wallet.exceptions.*;
+import com.swiggy.wallet.repository.IntraWalletTransactionsDAO;
 import com.swiggy.wallet.repository.TransactionDAO;
 import com.swiggy.wallet.repository.UserDAO;
 import com.swiggy.wallet.repository.WalletDAO;
@@ -40,6 +39,9 @@ public class TransactionServicesImpl implements TransactionService{
 
     @Autowired
     private WalletService walletService;
+
+    @Autowired
+    private IntraWalletTransactionsDAO intraWalletTransactionsDAO;
 
     @Override
     public List<TransactionsResponseModel> allTransactions() {
@@ -81,19 +83,21 @@ public class TransactionServicesImpl implements TransactionService{
 
         double serviceCharge = res.getServiceCharge().getAmount();
 
-        if(serviceCharge >= requestModel.getMoney().getAmount())
+        if(serviceCharge >= res.getMoney().getAmount())
             throw new InvalidAmountException(AMOUNT_LESS_THAN_SERVICE_CHARGE);
 
         senderWallet.withdraw(requestModel.getMoney());
+        IntraWalletTransactions withdrawTransaction = new IntraWalletTransactions(new Money(requestModel.getMoney().getAmount(), requestModel.getMoney().getCurrency()), IntraWalletTransactionType.WITHDRAW, senderWallet);
 
         if(serviceCharge > 0.0)
-            requestModel.getMoney().subtract(new Money(serviceCharge, requestModel.getMoney().getCurrency()));
+            requestModel.getMoney().subtract(new Money(serviceCharge, receiverWallet.getMoney().getCurrency()));
 
         receiverWallet.deposit(requestModel.getMoney());
+        IntraWalletTransactions depositTransaction = new IntraWalletTransactions(requestModel.getMoney(), IntraWalletTransactionType.DEPOSIT,receiverWallet);
 
         userDao.save(sender);
         userDao.save(receiver);
-        Transaction transaction = new Transaction(LocalDateTime.now(),requestModel.getMoney(), sender, senderWallet.getWalletId(), receiver, receiverWallet.getWalletId(), SERVICE_CHARGE_IN_INR);
+        Transaction transaction = new Transaction(LocalDateTime.now(),requestModel.getMoney(), sender, senderWallet.getWalletId(), receiver, receiverWallet.getWalletId(), new Money(res.getServiceCharge().getAmount(), Currency.valueOf(res.getServiceCharge().getCurrency())), depositTransaction, withdrawTransaction);
         transactionDao.save(transaction);
 
         return TRANSACTION_SUCCESSFUL;

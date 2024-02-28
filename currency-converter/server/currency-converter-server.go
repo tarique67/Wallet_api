@@ -22,23 +22,23 @@ func (s *server) ConvertMoney(ctx context.Context, req *pb.ConvertRequest) (*pb.
 	targetCurrency := req.TargetCurrency
 	sourceCurrency := req.SourceCurrency
 
-    if _, ok := ConversionFactorMap[Currency(currency)]; !ok {
-        return &pb.ConvertResponse{}, fmt.Errorf("unsupported currency: %s", currency)
-    }
+	if _, ok := ConversionFactorMap[Currency(currency)]; !ok {
+		return &pb.ConvertResponse{}, fmt.Errorf("unsupported currency: %s", currency)
+	}
 
 	if _, ok := ConversionFactorMap[Currency(targetCurrency)]; !ok {
-        return &pb.ConvertResponse{}, fmt.Errorf("unsupported currency: %s", currency)
-    }
+		return &pb.ConvertResponse{}, fmt.Errorf("unsupported currency: %s", currency)
+	}
 
 	if _, ok := ConversionFactorMap[Currency(sourceCurrency)]; !ok {
-        return &pb.ConvertResponse{}, fmt.Errorf("unsupported currency: %s", currency)
-    }
+		return &pb.ConvertResponse{}, fmt.Errorf("unsupported currency: %s", currency)
+	}
 
 	convertedAmount := amount
 	serviceCharge := &pb.Money{Currency: "INR", Amount: 0.0}
 	if currency != targetCurrency || currency != sourceCurrency {
 		convertedAmount = amount / Currency(targetCurrency).GetConversionFactor() * Currency(currency).GetConversionFactor()
-		serviceCharge = &pb.Money{Currency: "INR", Amount: 10.0}
+		serviceCharge = &pb.Money{Currency: targetCurrency, Amount: 10.0 / Currency(targetCurrency).GetConversionFactor()}
 	}
 
 	res := &pb.ConvertResponse{

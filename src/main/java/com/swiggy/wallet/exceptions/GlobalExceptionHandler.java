@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 
+import java.net.ConnectException;
 import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
 
@@ -89,6 +90,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(SameWalletsForTransactionException.class)
     public ResponseEntity<ErrorDetails> sameWalletsForTransactionExceptionHandler(SameWalletsForTransactionException exception, WebRequest re){
+        ErrorDetails err = new ErrorDetails(LocalDateTime.now(), exception.getMessage(), re.getDescription(false));
+
+        return new ResponseEntity<ErrorDetails>(err, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ConnectException.class)
+    public ResponseEntity<ErrorDetails> connectionExceptionHandler(ConnectException exception, WebRequest re){
         ErrorDetails err = new ErrorDetails(LocalDateTime.now(), exception.getMessage(), re.getDescription(false));
 
         return new ResponseEntity<ErrorDetails>(err, HttpStatus.BAD_REQUEST);

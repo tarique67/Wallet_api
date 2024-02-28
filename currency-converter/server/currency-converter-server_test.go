@@ -66,8 +66,8 @@ func TestConvertCurrencyToUSDFromEUR(t *testing.T) {
 			Amount:   107.14801788330078,
 		},
 		ServiceCharge: &pb.Money{
-			Currency: "INR",
-			Amount:   10,
+			Currency: "USD",
+			Amount:   0.12033694,
 		},
 	}
 
@@ -100,8 +100,8 @@ func TestConvertCurrencyToUSD(t *testing.T) {
 			Amount:   10,
 		},
 		ServiceCharge: &pb.Money{
-			Currency: "INR",
-			Amount:   10,
+			Currency: "USD",
+			Amount:   0.12033694,
 		},
 	}
 

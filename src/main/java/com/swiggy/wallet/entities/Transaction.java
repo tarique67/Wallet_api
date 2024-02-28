@@ -38,6 +38,12 @@ public class Transaction {
     })
     private Money serviceCharge;
 
+    @OneToOne(cascade = CascadeType.ALL)
+    private IntraWalletTransactions deposit;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    private IntraWalletTransactions withdraw;
+
     public Transaction(LocalDateTime timestamp, Money money, User sender, int senderWalletId, User receiver, int receiverWalletId, Money serviceCharge) {
         this.timestamp = timestamp;
         this.money = money;
@@ -46,5 +52,17 @@ public class Transaction {
         this.receiver = receiver;
         this.receiverWalletId = receiverWalletId;
         this.serviceCharge = serviceCharge;
+    }
+
+    public Transaction(LocalDateTime timestamp, Money money, User sender, int senderWalletId, User receiver, int receiverWalletId, Money serviceCharge, IntraWalletTransactions deposit, IntraWalletTransactions withdraw) {
+        this.timestamp = timestamp;
+        this.money = money;
+        this.sender = sender;
+        this.senderWalletId = senderWalletId;
+        this.receiver = receiver;
+        this.receiverWalletId = receiverWalletId;
+        this.serviceCharge = serviceCharge;
+        this.deposit = deposit;
+        this.withdraw = withdraw;
     }
 }

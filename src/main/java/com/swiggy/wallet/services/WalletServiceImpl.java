@@ -1,9 +1,12 @@
 package com.swiggy.wallet.services;
 
+import com.swiggy.wallet.entities.IntraWalletTransactions;
 import com.swiggy.wallet.entities.User;
 import com.swiggy.wallet.entities.Wallet;
+import com.swiggy.wallet.enums.IntraWalletTransactionType;
 import com.swiggy.wallet.exceptions.AuthenticationFailedException;
 import com.swiggy.wallet.exceptions.WalletNotFoundException;
+import com.swiggy.wallet.repository.IntraWalletTransactionsDAO;
 import com.swiggy.wallet.repository.UserDAO;
 import com.swiggy.wallet.requestModels.WalletRequestModel;
 import com.swiggy.wallet.responseModels.WalletResponseModel;
@@ -26,6 +29,9 @@ public class WalletServiceImpl implements WalletService {
 
     @Autowired
     private UserDAO userDao;
+
+    @Autowired
+    private IntraWalletTransactionsDAO intraWalletTransactionsDAO;
 
     @Override
     public Wallet create(Wallet wallet) {
@@ -52,6 +58,7 @@ public class WalletServiceImpl implements WalletService {
         wallet.deposit(requestModel.getMoney());
 
         walletDao.save(wallet);
+        intraWalletTransactionsDAO.save(new IntraWalletTransactions(requestModel.getMoney(), IntraWalletTransactionType.DEPOSIT, wallet));
         return new WalletResponseModel(walletId, wallet.getMoney());
     }
 
@@ -65,6 +72,7 @@ public class WalletServiceImpl implements WalletService {
         wallet.withdraw(requestModel.getMoney());
 
         walletDao.save(wallet);
+        intraWalletTransactionsDAO.save(new IntraWalletTransactions(requestModel.getMoney(), IntraWalletTransactionType.WITHDRAW, wallet));
         return new WalletResponseModel(walletId, wallet.getMoney());
     }
 
