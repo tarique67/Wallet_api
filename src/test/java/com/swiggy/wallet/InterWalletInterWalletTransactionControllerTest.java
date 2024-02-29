@@ -1,8 +1,12 @@
 package com.swiggy.wallet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.swiggy.wallet.entities.InterWalletTransaction;
+import com.swiggy.wallet.entities.IntraWalletTransaction;
 import com.swiggy.wallet.entities.Money;
+import com.swiggy.wallet.entities.Wallet;
 import com.swiggy.wallet.enums.Currency;
+import com.swiggy.wallet.enums.IntraWalletTransactionType;
 import com.swiggy.wallet.exceptions.SameWalletsForTransactionException;
 import com.swiggy.wallet.requestModels.InterWalletTransactionRequestModel;
 import com.swiggy.wallet.responseModels.InterWalletTransactionResponseModel;
@@ -51,14 +55,18 @@ public class InterWalletInterWalletTransactionControllerTest {
     void expectTransactionSuccessful() throws Exception {
         InterWalletTransactionRequestModel interWalletTransactionRequestModel = new InterWalletTransactionRequestModel(1,"receiver", 2,new Money(100, Currency.INR));
         String requestJson = objectMapper.writeValueAsString(interWalletTransactionRequestModel);
-        InterWalletTransactionResponseModel expected = new InterWalletTransactionResponseModel(LocalDateTime.now(),"sender", 1, "receiver", 2, new Money(90, Currency.INR), new Money(10.0, Currency.INR));
+        IntraWalletTransaction deposit = new IntraWalletTransaction(new Money(90, Currency.INR), IntraWalletTransactionType.DEPOSIT,new Wallet(), LocalDateTime.now());
+        IntraWalletTransaction withdrawal = new IntraWalletTransaction(new Money(100, Currency.INR), IntraWalletTransactionType.WITHDRAW,new Wallet(), LocalDateTime.now());
+        InterWalletTransactionResponseModel expected = new InterWalletTransactionResponseModel(1,"sender", 1, "receiver", 2, deposit, withdrawal, new Money(10.0, Currency.INR));
         when(interWalletTransactionService.transact(interWalletTransactionRequestModel)).thenReturn(expected);
 
         mockMvc.perform(post("/api/v1/transactions/inter-wallet-transaction")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isAccepted())
-                .andExpect(jsonPath("$.money.amount").value(90));
+                .andExpect(jsonPath("$.deposit.money.amount").value(90))
+                .andExpect(jsonPath("$.withdrawal.money.amount").value(100))
+                .andExpect(jsonPath("$.serviceCharge.amount").value(10));
         verify(interWalletTransactionService, times(1)).transact(interWalletTransactionRequestModel);
     }
 
@@ -82,7 +90,9 @@ public class InterWalletInterWalletTransactionControllerTest {
     void expectAllTransactionsOfUser() throws Exception {
         InterWalletTransactionRequestModel interWalletTransactionRequestModel = new InterWalletTransactionRequestModel(1,"receiver",2, new Money(100, Currency.INR));
         String requestJson = objectMapper.writeValueAsString(interWalletTransactionRequestModel);
-        when(interWalletTransactionService.allTransactions()).thenReturn(Arrays.asList(new InterWalletTransactionResponseModel(LocalDateTime.now(),"sender",1,"receiver",2, new Money(100, Currency.INR), new Money(0, Currency.INR))));
+        IntraWalletTransaction deposit = new IntraWalletTransaction(new Money(100, Currency.INR), IntraWalletTransactionType.DEPOSIT,new Wallet(), LocalDateTime.now());
+        IntraWalletTransaction withdrawal = new IntraWalletTransaction(new Money(100, Currency.INR), IntraWalletTransactionType.WITHDRAW,new Wallet(), LocalDateTime.now());
+        when(interWalletTransactionService.allTransactions()).thenReturn(Arrays.asList(new InterWalletTransactionResponseModel(1, "sender",1,"receiver",2, deposit, withdrawal, new Money(0, Currency.INR))));
 
         mockMvc.perform(get("/api/v1/transactions")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -95,7 +105,9 @@ public class InterWalletInterWalletTransactionControllerTest {
     void expectUnauthorizedForAllTransactions() throws Exception {
         InterWalletTransactionRequestModel interWalletTransactionRequestModel = new InterWalletTransactionRequestModel(1,"receiver",2, new Money(100, Currency.INR));
         String requestJson = objectMapper.writeValueAsString(interWalletTransactionRequestModel);
-        when(interWalletTransactionService.allTransactions()).thenReturn(Arrays.asList(new InterWalletTransactionResponseModel(LocalDateTime.now(),"sender",1,"receiver",2, new Money(100, Currency.INR), new Money(0, Currency.INR))));
+        IntraWalletTransaction deposit = new IntraWalletTransaction(new Money(100, Currency.INR), IntraWalletTransactionType.DEPOSIT,new Wallet(), LocalDateTime.now());
+        IntraWalletTransaction withdrawal = new IntraWalletTransaction(new Money(100, Currency.INR), IntraWalletTransactionType.WITHDRAW,new Wallet(), LocalDateTime.now());
+        when(interWalletTransactionService.allTransactions()).thenReturn(Arrays.asList(new InterWalletTransactionResponseModel(1,"sender",1,"receiver",2, deposit, withdrawal, new Money(0, Currency.INR))));
 
         mockMvc.perform(get("/api/v1/transactions")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -109,9 +121,13 @@ public class InterWalletInterWalletTransactionControllerTest {
     public void expectAllTransactionsDateBased() throws Exception {
         LocalDate startDate = LocalDate.of(2022, 1, 1);
         LocalDate endDate = LocalDate.of(2022, 1, 31);
+        IntraWalletTransaction deposit = new IntraWalletTransaction(new Money(100, Currency.INR), IntraWalletTransactionType.DEPOSIT,new Wallet(), LocalDateTime.now());
+        IntraWalletTransaction withdrawal = new IntraWalletTransaction(new Money(100, Currency.INR), IntraWalletTransactionType.WITHDRAW,new Wallet(), LocalDateTime.now());
+        IntraWalletTransaction secondDeposit = new IntraWalletTransaction(new Money(200, Currency.INR), IntraWalletTransactionType.DEPOSIT,new Wallet(), LocalDateTime.now());
+        IntraWalletTransaction secondWithdrawal = new IntraWalletTransaction(new Money(200, Currency.INR), IntraWalletTransactionType.WITHDRAW,new Wallet(), LocalDateTime.now());
         List<InterWalletTransactionResponseModel> mockResponse = Arrays.asList(
-                new InterWalletTransactionResponseModel(LocalDateTime.now(),"sender", 1, "receiver1", 2, new Money(100, Currency.INR), new Money(0, Currency.INR)),
-                new InterWalletTransactionResponseModel(LocalDateTime.now(),"sender", 1, "receiver2", 3, new Money(200, Currency.INR), new Money(0, Currency.INR))
+                new InterWalletTransactionResponseModel(1,"sender", 1, "receiver1", 2, deposit, withdrawal, new Money(0, Currency.INR)),
+                new InterWalletTransactionResponseModel(2,"sender", 1, "receiver2", 3, secondDeposit, secondWithdrawal, new Money(0, Currency.INR))
         );
         when(interWalletTransactionService.allTransactionsDateBased(startDate, endDate)).thenReturn(mockResponse);
 
@@ -123,10 +139,10 @@ public class InterWalletInterWalletTransactionControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].sender").value("sender"))
                 .andExpect(jsonPath("$[0].receiver").value("receiver1"))
-                .andExpect(jsonPath("$[0].money.amount").value(100))
+                .andExpect(jsonPath("$[0].deposit.money.amount").value(100))
                 .andExpect(jsonPath("$[1].sender").value("sender"))
                 .andExpect(jsonPath("$[1].receiver").value("receiver2"))
-                .andExpect(jsonPath("$[1].money.amount").value(200));
+                .andExpect(jsonPath("$[1].deposit.money.amount").value(200));
         verify(interWalletTransactionService, times(1)).allTransactionsDateBased(startDate,endDate);
     }
 
@@ -134,7 +150,9 @@ public class InterWalletInterWalletTransactionControllerTest {
     void expectUnauthorizedForAllTransactionsDateBased() throws Exception {
         InterWalletTransactionRequestModel interWalletTransactionRequestModel = new InterWalletTransactionRequestModel(1, "receiver", 2, new Money(100, Currency.INR));
         String requestJson = objectMapper.writeValueAsString(interWalletTransactionRequestModel);
-        when(interWalletTransactionService.allTransactionsDateBased(LocalDate.now(), LocalDate.now())).thenReturn(Arrays.asList(new InterWalletTransactionResponseModel(LocalDateTime.now() ,"sender1", 1, "receiver1",2, new Money(100, Currency.INR), new Money(0, Currency.INR))));
+        IntraWalletTransaction deposit = new IntraWalletTransaction(new Money(100, Currency.INR), IntraWalletTransactionType.DEPOSIT,new Wallet(), LocalDateTime.now());
+        IntraWalletTransaction withdrawal = new IntraWalletTransaction(new Money(100, Currency.INR), IntraWalletTransactionType.WITHDRAW,new Wallet(), LocalDateTime.now());
+        when(interWalletTransactionService.allTransactionsDateBased(LocalDate.now(), LocalDate.now())).thenReturn(Arrays.asList(new InterWalletTransactionResponseModel(1,"sender1", 1, "receiver1",2, deposit, withdrawal, new Money(0, Currency.INR))));
 
         mockMvc.perform(get("/api/v1/transactions")
                         .contentType(MediaType.APPLICATION_JSON)

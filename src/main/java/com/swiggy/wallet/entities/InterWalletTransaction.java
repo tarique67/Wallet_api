@@ -5,8 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Entity
 @Data
 @AllArgsConstructor
@@ -15,11 +13,7 @@ public class InterWalletTransaction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private int transactionId;
-
-    private LocalDateTime timestamp;
-
-    private Money money;
+    private int interWalletTransactionId;
 
     @ManyToOne(cascade = CascadeType.ALL)
     private User sender;
@@ -39,30 +33,18 @@ public class InterWalletTransaction {
     private Money serviceCharge;
 
     @OneToOne(cascade = CascadeType.ALL)
-    private IntraWalletTransactions deposit;
+    private IntraWalletTransaction deposit;
 
     @OneToOne(cascade = CascadeType.ALL)
-    private IntraWalletTransactions withdraw;
+    private IntraWalletTransaction withdrawal;
 
-    public InterWalletTransaction(LocalDateTime timestamp, Money money, User sender, int senderWalletId, User receiver, int receiverWalletId, Money serviceCharge) {
-        this.timestamp = timestamp;
-        this.money = money;
-        this.sender = sender;
-        this.senderWalletId = senderWalletId;
-        this.receiver = receiver;
-        this.receiverWalletId = receiverWalletId;
-        this.serviceCharge = serviceCharge;
-    }
-
-    public InterWalletTransaction(LocalDateTime timestamp, Money money, User sender, int senderWalletId, User receiver, int receiverWalletId, Money serviceCharge, IntraWalletTransactions deposit, IntraWalletTransactions withdraw) {
-        this.timestamp = timestamp;
-        this.money = money;
+    public InterWalletTransaction(User sender, int senderWalletId, User receiver, int receiverWalletId, Money serviceCharge, IntraWalletTransaction deposit, IntraWalletTransaction withdrawal) {
         this.sender = sender;
         this.senderWalletId = senderWalletId;
         this.receiver = receiver;
         this.receiverWalletId = receiverWalletId;
         this.serviceCharge = serviceCharge;
         this.deposit = deposit;
-        this.withdraw = withdraw;
+        this.withdrawal = withdrawal;
     }
 }

@@ -1,6 +1,6 @@
 package com.swiggy.wallet.services;
 
-import com.swiggy.wallet.entities.IntraWalletTransactions;
+import com.swiggy.wallet.entities.IntraWalletTransaction;
 import com.swiggy.wallet.entities.User;
 import com.swiggy.wallet.entities.Wallet;
 import com.swiggy.wallet.enums.IntraWalletTransactionType;
@@ -59,7 +59,7 @@ public class WalletServiceImpl implements WalletService {
         wallet.deposit(requestModel.getMoney());
 
         walletDao.save(wallet);
-        intraWalletTransactionsDAO.save(new IntraWalletTransactions(requestModel.getMoney(), IntraWalletTransactionType.DEPOSIT, wallet, LocalDateTime.now()));
+        intraWalletTransactionsDAO.save(new IntraWalletTransaction(requestModel.getMoney(), IntraWalletTransactionType.DEPOSIT, wallet, LocalDateTime.now()));
         return new WalletResponseModel(walletId, wallet.getMoney());
     }
 
@@ -73,7 +73,7 @@ public class WalletServiceImpl implements WalletService {
         wallet.withdraw(requestModel.getMoney());
 
         walletDao.save(wallet);
-        intraWalletTransactionsDAO.save(new IntraWalletTransactions(requestModel.getMoney(), IntraWalletTransactionType.WITHDRAW, wallet, LocalDateTime.now()));
+        intraWalletTransactionsDAO.save(new IntraWalletTransaction(requestModel.getMoney(), IntraWalletTransactionType.WITHDRAW, wallet, LocalDateTime.now()));
         return new WalletResponseModel(walletId, wallet.getMoney());
     }
 

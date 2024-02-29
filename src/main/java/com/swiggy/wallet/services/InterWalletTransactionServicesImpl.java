@@ -14,7 +14,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,7 +43,7 @@ public class InterWalletTransactionServicesImpl implements InterWalletTransactio
         User user = userDao.findByUserName(username).orElseThrow(()-> new UsernameNotFoundException("Username not found."));
 
         List<InterWalletTransaction> interWalletTransactions = interWalletTransactionDao.findTransactionsOfUser(user);
-        List<InterWalletTransactionResponseModel> response = interWalletTransactions.stream().map((transaction -> new InterWalletTransactionResponseModel(transaction.getTimestamp(), transaction.getSender().getUserName(), transaction.getSenderWalletId(), transaction.getReceiver().getUserName(), transaction.getReceiverWalletId(), transaction.getMoney(), transaction.getServiceCharge()))).collect(Collectors.toList());
+        List<InterWalletTransactionResponseModel> response = interWalletTransactions.stream().map((transaction -> new InterWalletTransactionResponseModel(transaction.getInterWalletTransactionId(), transaction.getSender().getUserName(), transaction.getSenderWalletId(), transaction.getReceiver().getUserName(), transaction.getReceiverWalletId(), transaction.getDeposit(), transaction.getWithdrawal(), transaction.getServiceCharge()))).collect(Collectors.toList());
 
         return response;
     }
@@ -55,7 +54,7 @@ public class InterWalletTransactionServicesImpl implements InterWalletTransactio
         User user = userDao.findByUserName(username).orElseThrow(()-> new UsernameNotFoundException("Username not found."));
 
         List<InterWalletTransaction> interWalletTransactions = interWalletTransactionDao.findTransactionsOfUserDateBased(user,startDate.atTime(0,0,0), endDate.atTime(23,59,59));
-        List<InterWalletTransactionResponseModel> response = interWalletTransactions.stream().map((transaction -> new InterWalletTransactionResponseModel(transaction.getTimestamp(), transaction.getSender().getUserName(), transaction.getSenderWalletId(), transaction.getReceiver().getUserName(), transaction.getReceiverWalletId(), transaction.getMoney(), transaction.getServiceCharge()))).collect(Collectors.toList());
+        List<InterWalletTransactionResponseModel> response = interWalletTransactions.stream().map((transaction -> new InterWalletTransactionResponseModel(transaction.getInterWalletTransactionId(), transaction.getSender().getUserName(), transaction.getSenderWalletId(), transaction.getReceiver().getUserName(), transaction.getReceiverWalletId(), transaction.getDeposit(), transaction.getWithdrawal(), transaction.getServiceCharge()))).collect(Collectors.toList());
 
         return response;
     }
@@ -77,8 +76,8 @@ public class InterWalletTransactionServicesImpl implements InterWalletTransactio
 
         userDao.save(sender);
         userDao.save(receiver);
-        interWalletTransactionDao.save(interWalletTransaction);
+        InterWalletTransaction savedTransaction = interWalletTransactionDao.save(interWalletTransaction);
 
-        return new InterWalletTransactionResponseModel(LocalDateTime.now(), username, requestModel.getSenderWalletId(), requestModel.getReceiverName(), requestModel.getReceiverWalletId(), requestModel.getMoney(), interWalletTransaction.getServiceCharge());
+        return new InterWalletTransactionResponseModel(savedTransaction.getInterWalletTransactionId(), username, requestModel.getSenderWalletId(), requestModel.getReceiverName(), requestModel.getReceiverWalletId(), savedTransaction.getDeposit(), savedTransaction.getWithdrawal(), interWalletTransaction.getServiceCharge());
     }
 }

@@ -1,6 +1,6 @@
 package com.swiggy.wallet;
 
-import com.swiggy.wallet.entities.IntraWalletTransactions;
+import com.swiggy.wallet.entities.IntraWalletTransaction;
 import com.swiggy.wallet.entities.Money;
 import com.swiggy.wallet.entities.User;
 import com.swiggy.wallet.entities.Wallet;
@@ -73,7 +73,7 @@ public class WalletServiceTest {
         when(walletDao.findById(1)).thenReturn(Optional.of(wallet));
         when(user.getWallets()).thenReturn(Arrays.asList(wallet));
         WalletRequestModel requestModel = new WalletRequestModel(new Money(100,Currency.INR));
-        IntraWalletTransactions deposit = new IntraWalletTransactions(new Money(100,Currency.INR), IntraWalletTransactionType.DEPOSIT, wallet, LocalDateTime.now());
+        IntraWalletTransaction deposit = new IntraWalletTransaction(new Money(100,Currency.INR), IntraWalletTransactionType.DEPOSIT, wallet, LocalDateTime.now());
 
         walletService.deposit(1, "testUser", requestModel);
 
@@ -102,7 +102,7 @@ public class WalletServiceTest {
         when(walletDao.findById(1)).thenReturn(Optional.of(wallet));
         when(user.getWallets()).thenReturn(Arrays.asList(wallet));
         WalletRequestModel requestModel = new WalletRequestModel(new Money(50, Currency.INR));
-        IntraWalletTransactions withdraw = new IntraWalletTransactions(new Money(50,Currency.INR), IntraWalletTransactionType.WITHDRAW, wallet, LocalDateTime.now());
+        IntraWalletTransaction withdraw = new IntraWalletTransaction(new Money(50,Currency.INR), IntraWalletTransactionType.WITHDRAW, wallet, LocalDateTime.now());
 
         WalletResponseModel returnedWallet = walletService.withdraw(1, "testUser", requestModel);
 

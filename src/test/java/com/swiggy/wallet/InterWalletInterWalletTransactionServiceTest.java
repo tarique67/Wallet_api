@@ -1,11 +1,9 @@
 package com.swiggy.wallet;
 
-import com.swiggy.wallet.entities.InterWalletTransaction;
-import com.swiggy.wallet.entities.Money;
-import com.swiggy.wallet.entities.User;
-import com.swiggy.wallet.entities.Wallet;
+import com.swiggy.wallet.entities.*;
 import com.swiggy.wallet.enums.Country;
 import com.swiggy.wallet.enums.Currency;
+import com.swiggy.wallet.enums.IntraWalletTransactionType;
 import com.swiggy.wallet.exceptions.*;
 import com.swiggy.wallet.repository.InterWalletTransactionDAO;
 import com.swiggy.wallet.repository.UserDAO;
@@ -72,6 +70,9 @@ public class InterWalletInterWalletTransactionServiceTest {
         User sender = new User(1,"sender", "senderPassword", Country.INDIA, Arrays.asList(senderWallet));
         User receiver = new User(2,"receiver", "receiverPassword", Country.INDIA, Arrays.asList(receiverWallet));
         InterWalletTransactionRequestModel requestModel = spy(new InterWalletTransactionRequestModel(1,"receiver", 2, new Money(100.0, Currency.INR)));
+        IntraWalletTransaction deposit = new IntraWalletTransaction(new Money(100, Currency.INR), IntraWalletTransactionType.DEPOSIT,receiverWallet, LocalDateTime.now());
+        IntraWalletTransaction withdrawal = new IntraWalletTransaction(new Money(100, Currency.INR), IntraWalletTransactionType.WITHDRAW,senderWallet, LocalDateTime.now());
+        InterWalletTransaction transaction = new InterWalletTransaction(1, sender, 1, receiver, 2, new Money(0.0, Currency.INR), deposit, withdrawal);
         when(authentication.getName()).thenReturn("sender");
         when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
@@ -79,6 +80,7 @@ public class InterWalletInterWalletTransactionServiceTest {
         when(userDao.findByUserName("receiver")).thenReturn(Optional.of(receiver));
         when(walletDao.findById(1)).thenReturn(Optional.of(senderWallet));
         when(walletDao.findById(2)).thenReturn(Optional.of(receiverWallet));
+        when(interWalletTransactionDao.save(any())).thenReturn(transaction);
 
         transactionService.transact(requestModel);
 
@@ -100,6 +102,9 @@ public class InterWalletInterWalletTransactionServiceTest {
         Money moneyToTransact = new Money(100.0, Currency.INR);
         Money moneyAfterServiceChargeCut = new Money(90.0, Currency.INR);
         InterWalletTransactionRequestModel requestModel = spy(new InterWalletTransactionRequestModel(1,"receiver", 2, moneyToTransact));
+        IntraWalletTransaction deposit = new IntraWalletTransaction(new Money(100, Currency.INR), IntraWalletTransactionType.DEPOSIT,receiverWallet, LocalDateTime.now());
+        IntraWalletTransaction withdrawal = new IntraWalletTransaction(new Money(100, Currency.INR), IntraWalletTransactionType.WITHDRAW,senderWallet, LocalDateTime.now());
+        InterWalletTransaction transaction = new InterWalletTransaction(1, sender, 1, receiver, 2, new Money(0.0, Currency.INR), deposit, withdrawal);
         when(authentication.getName()).thenReturn("sender");
         when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
@@ -107,6 +112,7 @@ public class InterWalletInterWalletTransactionServiceTest {
         when(userDao.findByUserName("receiver")).thenReturn(Optional.of(receiver));
         when(walletDao.findById(1)).thenReturn(Optional.of(senderWallet));
         when(walletDao.findById(2)).thenReturn(Optional.of(receiverWallet));
+        when(interWalletTransactionDao.save(any())).thenReturn(transaction);
 
         transactionService.transact(requestModel);
 
@@ -126,6 +132,9 @@ public class InterWalletInterWalletTransactionServiceTest {
         User receiver = new User(2,"receiver", "receiverPassword", Country.INDIA, Arrays.asList(receiverWallet));
         Money moneyToTransact = new Money(9.0, Currency.INR);
         InterWalletTransactionRequestModel requestModel = spy(new InterWalletTransactionRequestModel(1,"receiver", 2, moneyToTransact));
+        IntraWalletTransaction deposit = new IntraWalletTransaction(new Money(100, Currency.INR), IntraWalletTransactionType.DEPOSIT,receiverWallet, LocalDateTime.now());
+        IntraWalletTransaction withdrawal = new IntraWalletTransaction(new Money(100, Currency.INR), IntraWalletTransactionType.WITHDRAW,senderWallet, LocalDateTime.now());
+        InterWalletTransaction transaction = new InterWalletTransaction(1, sender, 1, receiver, 2, new Money(0.0, Currency.INR), deposit, withdrawal);
         when(authentication.getName()).thenReturn("sender");
         when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
@@ -133,6 +142,7 @@ public class InterWalletInterWalletTransactionServiceTest {
         when(userDao.findByUserName("receiver")).thenReturn(Optional.of(receiver));
         when(walletDao.findById(1)).thenReturn(Optional.of(senderWallet));
         when(walletDao.findById(2)).thenReturn(Optional.of(receiverWallet));
+        when(interWalletTransactionDao.save(any())).thenReturn(transaction);
 
         assertThrows(InvalidAmountException.class, ()-> transactionService.transact(requestModel));
         verify(senderWallet, never()).withdraw(any());
@@ -221,12 +231,16 @@ public class InterWalletInterWalletTransactionServiceTest {
         firstSenderWallet.deposit(new Money(100.0,Currency.INR));
         User sender = new User(1,"sender", "senderPassword", Country.INDIA, Arrays.asList(firstSenderWallet, secondSenderWallet));
         InterWalletTransactionRequestModel requestModel = spy(new InterWalletTransactionRequestModel(1,"sender", 2, new Money(90.0, Currency.INR)));
+        IntraWalletTransaction deposit = new IntraWalletTransaction(new Money(100, Currency.INR), IntraWalletTransactionType.DEPOSIT,secondSenderWallet, LocalDateTime.now());
+        IntraWalletTransaction withdrawal = new IntraWalletTransaction(new Money(100, Currency.INR), IntraWalletTransactionType.WITHDRAW,firstSenderWallet, LocalDateTime.now());
+        InterWalletTransaction transaction = new InterWalletTransaction(1, sender, 1, sender, 2, new Money(0.0, Currency.INR), deposit, withdrawal);
         when(authentication.getName()).thenReturn("sender");
         when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
         when(userDao.findByUserName("sender")).thenReturn(Optional.of(sender));
         when(walletDao.findById(1)).thenReturn(Optional.of(firstSenderWallet));
         when(walletDao.findById(2)).thenReturn(Optional.of(secondSenderWallet));
+        when(interWalletTransactionDao.save(any())).thenReturn(transaction);
 
         transactionService.transact(requestModel);
 
@@ -245,8 +259,10 @@ public class InterWalletInterWalletTransactionServiceTest {
         SecurityContextHolder.setContext(securityContext);
         Wallet senderWallet = new Wallet(1, new Money(1000.0, Currency.INR));
         Wallet receiverWallet = new Wallet(2, new Money(0, Currency.INR));
-        InterWalletTransaction firstInterWalletTransaction = new InterWalletTransaction(LocalDateTime.now(), new Money(100, Currency.INR), sender, 1, receiver, 2, new Money(0, Currency.INR));
-        InterWalletTransaction secondInterWalletTransaction = new InterWalletTransaction(LocalDateTime.now(),new Money(200, Currency.INR), sender, 1,receiver, 2, new Money(0, Currency.INR));
+        IntraWalletTransaction deposit = new IntraWalletTransaction(new Money(100, Currency.INR), IntraWalletTransactionType.DEPOSIT,receiverWallet, LocalDateTime.now());
+        IntraWalletTransaction withdrawal = new IntraWalletTransaction(new Money(100, Currency.INR), IntraWalletTransactionType.WITHDRAW,senderWallet, LocalDateTime.now());
+        InterWalletTransaction firstInterWalletTransaction = new InterWalletTransaction(sender, 1, receiver, 2, new Money(0, Currency.INR), deposit, withdrawal);
+        InterWalletTransaction secondInterWalletTransaction = new InterWalletTransaction(sender, 1,receiver, 2, new Money(0, Currency.INR), deposit, withdrawal);
         List<InterWalletTransaction> interWalletTransactions = Arrays.asList(firstInterWalletTransaction, secondInterWalletTransaction);
         when(userDao.findByUserName("sender")).thenReturn(Optional.of(sender));
         when(interWalletTransactionDao.findTransactionsOfUser(sender)).thenReturn(interWalletTransactions);
@@ -266,7 +282,9 @@ public class InterWalletInterWalletTransactionServiceTest {
         LocalDateTime endDate = LocalDate.of(2022, 1, 31).atTime(23, 59, 59);
         Wallet senderWallet = new Wallet(1, new Money(1000.0, Currency.INR));
         Wallet receiverWallet = new Wallet(2, new Money(0, Currency.INR));
-        InterWalletTransaction interWalletTransaction = new InterWalletTransaction(LocalDateTime.now(), new Money(100, Currency.INR) , sender, 1, receiver, 2, new Money(0, Currency.INR));
+        IntraWalletTransaction deposit = new IntraWalletTransaction(new Money(100, Currency.INR), IntraWalletTransactionType.DEPOSIT,receiverWallet, LocalDateTime.now());
+        IntraWalletTransaction withdrawal = new IntraWalletTransaction(new Money(100, Currency.INR), IntraWalletTransactionType.WITHDRAW,senderWallet, LocalDateTime.now());
+        InterWalletTransaction interWalletTransaction = new InterWalletTransaction(sender, 1, receiver, 2, new Money(0, Currency.INR),deposit,withdrawal);
         List<InterWalletTransaction> interWalletTransactions = new ArrayList<>();
         interWalletTransactions.add(interWalletTransaction);
         when(authentication.getName()).thenReturn("sender");
@@ -287,8 +305,14 @@ public class InterWalletInterWalletTransactionServiceTest {
         User receiver = new User("receiver", "receiverPassword", Country.INDIA);
         LocalDateTime startDate = LocalDate.of(2022, 1, 1).atStartOfDay();
         LocalDateTime endDate = LocalDate.of(2022, 1, 31).atTime(23, 59, 59);
-        InterWalletTransaction firstInterWalletTransaction = new InterWalletTransaction(LocalDateTime.now(), new Money(100, Currency.INR) , sender, 1, receiver, 2, new Money(0, Currency.INR));
-        InterWalletTransaction secondInterWalletTransaction = new InterWalletTransaction(LocalDateTime.now().minusDays(2), new Money(100, Currency.INR) , sender, 1, receiver, 2, new Money(0, Currency.INR));
+        Wallet senderWallet = new Wallet(1, new Money(1000.0, Currency.INR));
+        Wallet receiverWallet = new Wallet(2, new Money(0, Currency.INR));
+        IntraWalletTransaction deposit = new IntraWalletTransaction(new Money(100, Currency.INR), IntraWalletTransactionType.DEPOSIT,receiverWallet, LocalDateTime.now());
+        IntraWalletTransaction withdrawal = new IntraWalletTransaction(new Money(100, Currency.INR), IntraWalletTransactionType.WITHDRAW,senderWallet, LocalDateTime.now());
+        IntraWalletTransaction secondDeposit = new IntraWalletTransaction(new Money(100, Currency.INR), IntraWalletTransactionType.DEPOSIT,receiverWallet, LocalDateTime.now().minusDays(2));
+        IntraWalletTransaction secondWithdrawal = new IntraWalletTransaction(new Money(100, Currency.INR), IntraWalletTransactionType.WITHDRAW,senderWallet, LocalDateTime.now().minusDays(2));
+        InterWalletTransaction firstInterWalletTransaction = new InterWalletTransaction(sender, 1, receiver, 2, new Money(0, Currency.INR), deposit, withdrawal);
+        InterWalletTransaction secondInterWalletTransaction = new InterWalletTransaction(sender, 1, receiver, 2, new Money(0, Currency.INR), secondDeposit, secondWithdrawal);
         List<InterWalletTransaction> allInterWalletTransactions = new ArrayList<>();
         allInterWalletTransactions.add(firstInterWalletTransaction);
         allInterWalletTransactions.add(secondInterWalletTransaction);

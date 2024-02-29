@@ -50,14 +50,14 @@ public class Wallet {
             throw new InvalidAmountException(AMOUNT_LESS_THAN_SERVICE_CHARGE);
 
         this.withdraw(requestModel.getMoney());
-        IntraWalletTransactions withdrawTransaction = new IntraWalletTransactions(new Money(requestModel.getMoney().getAmount(), requestModel.getMoney().getCurrency()), IntraWalletTransactionType.WITHDRAW, this, LocalDateTime.now());
+        IntraWalletTransaction withdrawTransaction = new IntraWalletTransaction(new Money(requestModel.getMoney().getAmount(), requestModel.getMoney().getCurrency()), IntraWalletTransactionType.WITHDRAW, this, LocalDateTime.now());
 
         if(serviceCharge > 0.0)
             requestModel.getMoney().subtract(new Money(serviceCharge, receiverWallet.getMoney().getCurrency()));
 
         receiverWallet.deposit(requestModel.getMoney());
-        IntraWalletTransactions depositTransaction = new IntraWalletTransactions(requestModel.getMoney(), IntraWalletTransactionType.DEPOSIT,receiverWallet, LocalDateTime.now());
+        IntraWalletTransaction depositTransaction = new IntraWalletTransaction(requestModel.getMoney(), IntraWalletTransactionType.DEPOSIT,receiverWallet, LocalDateTime.now());
 
-        return new InterWalletTransaction(LocalDateTime.now(),requestModel.getMoney(), sender, this.getWalletId(), receiver, receiverWallet.getWalletId(), new Money(res.getServiceCharge().getAmount(), Currency.valueOf(res.getServiceCharge().getCurrency())), depositTransaction, withdrawTransaction);
+        return new InterWalletTransaction(sender, this.getWalletId(), receiver, receiverWallet.getWalletId(), new Money(res.getServiceCharge().getAmount(), Currency.valueOf(res.getServiceCharge().getCurrency())), depositTransaction, withdrawTransaction);
     }
 }
