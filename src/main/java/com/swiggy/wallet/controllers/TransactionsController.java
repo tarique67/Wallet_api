@@ -20,12 +20,6 @@ public class TransactionsController {
     @Autowired
     private TransactionsService transactionsService;
 
-    @PostMapping("/inter-wallet-transaction")
-    public ResponseEntity<InterWalletTransactionResponseModel> transact(@RequestBody InterWalletTransactionRequestModel interWalletTransactionRequestModel) throws InsufficientBalanceException, InvalidAmountException, UserNotFoundException, WalletNotFoundException, SameWalletsForTransactionException {
-        InterWalletTransactionResponseModel response = transactionsService.transact(interWalletTransactionRequestModel);
-        return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
-    }
-
     @GetMapping
     public ResponseEntity<TransactionsResponseModel> allTransactions(@RequestParam(required = false) LocalDate startDate, @RequestParam(required = false) LocalDate endDate){
         if(startDate != null && endDate != null)

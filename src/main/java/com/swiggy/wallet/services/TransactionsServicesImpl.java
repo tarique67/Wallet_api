@@ -72,25 +72,4 @@ public class TransactionsServicesImpl implements TransactionsService {
         return new TransactionsResponseModel(interWalletTransactionResponseModels, intraWalletTransactions);
     }
 
-    @Override
-    public InterWalletTransactionResponseModel transact(InterWalletTransactionRequestModel requestModel) throws InsufficientBalanceException, InvalidAmountException, UserNotFoundException, WalletNotFoundException, SameWalletsForTransactionException {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User sender = userDao.findByUserName(username).orElseThrow(() -> new UsernameNotFoundException("User "+ username + " not found."));
-        User receiver = userDao.findByUserName(requestModel.getReceiverName()).orElseThrow(() -> new UserNotFoundException("User "+ requestModel.getReceiverName() + " not found."));
-        Wallet senderWallet = walletDao.findById(requestModel.getSenderWalletId()).orElseThrow(()-> new WalletNotFoundException(SENDER_WALLET_NOT_FOUND));
-        Wallet receiverWallet = walletDao.findById(requestModel.getReceiverWalletId()).orElseThrow(()-> new WalletNotFoundException(RECEIVER_WALLET_NOT_FOUND));
-
-        if(!sender.getWallets().contains(senderWallet) || !receiver.getWallets().contains(receiverWallet))
-            throw new WalletNotFoundException(WALLET_ID_DOES_NOT_MATCH);
-        if(senderWallet.equals(receiverWallet))
-            throw new SameWalletsForTransactionException(WALLETS_SAME_IN_TRANSACTION);
-
-        InterWalletTransaction interWalletTransaction = senderWallet.transact(requestModel, sender, receiverWallet, receiver);
-
-        userDao.save(sender);
-        userDao.save(receiver);
-        InterWalletTransaction savedTransaction = interWalletTransactionDao.save(interWalletTransaction);
-
-        return new InterWalletTransactionResponseModel(savedTransaction.getInterWalletTransactionId(), username, requestModel.getSenderWalletId(), requestModel.getReceiverName(), requestModel.getReceiverWalletId(), savedTransaction.getDeposit(), savedTransaction.getWithdrawal(), interWalletTransaction.getServiceCharge());
-    }
 }

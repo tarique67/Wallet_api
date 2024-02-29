@@ -9,7 +9,6 @@ import java.time.LocalDate;
 
 public interface TransactionsService {
 
-    InterWalletTransactionResponseModel transact(InterWalletTransactionRequestModel requestModel) throws InsufficientBalanceException, InvalidAmountException, UserNotFoundException, WalletNotFoundException, SameWalletsForTransactionException;
     TransactionsResponseModel allTransactions();
 
     TransactionsResponseModel allTransactionsDateBased(LocalDate startDate, LocalDate endDate);
