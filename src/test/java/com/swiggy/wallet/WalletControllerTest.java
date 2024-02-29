@@ -50,8 +50,9 @@ public class WalletControllerTest {
         WalletResponseModel responseModel = new WalletResponseModel(1,new Money(100, Currency.INR));
         when(walletService.deposit(anyInt(), anyString(), any())).thenReturn(responseModel);
 
-        mockMvc.perform(put("/api/v1/wallets/1/deposit")
+        mockMvc.perform(post("/api/v1/wallets/1/intra-wallet-transaction")
                         .contentType(MediaType.APPLICATION_JSON)
+                        .header("type", "deposit")
                         .content(objectMapper.writeValueAsString(requestModel)))
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.money.amount").value("100.0"));
@@ -79,8 +80,9 @@ public class WalletControllerTest {
         WalletResponseModel responseModel = new WalletResponseModel(1, new Money(50, Currency.INR));
         when(walletService.withdraw(anyInt(), anyString(), any())).thenReturn(responseModel);
 
-        mockMvc.perform(put("/api/v1/wallets/1/withdrawal")
+        mockMvc.perform(post("/api/v1/wallets/1/intra-wallet-transaction")
                         .contentType(MediaType.APPLICATION_JSON)
+                        .header("type", "withdraw")
                         .content(requestBody))
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.money.amount").value("50.0"));

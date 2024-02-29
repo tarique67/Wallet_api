@@ -6,11 +6,13 @@ import com.swiggy.wallet.enums.Currency;
 import com.swiggy.wallet.enums.IntraWalletTransactionType;
 import com.swiggy.wallet.exceptions.*;
 import com.swiggy.wallet.repository.InterWalletTransactionDAO;
+import com.swiggy.wallet.repository.IntraWalletTransactionsDAO;
 import com.swiggy.wallet.repository.UserDAO;
 import com.swiggy.wallet.repository.WalletDAO;
 import com.swiggy.wallet.requestModels.InterWalletTransactionRequestModel;
 import com.swiggy.wallet.responseModels.InterWalletTransactionResponseModel;
-import com.swiggy.wallet.services.InterWalletTransactionServicesImpl;
+import com.swiggy.wallet.responseModels.TransactionsResponseModel;
+import com.swiggy.wallet.services.TransactionsServicesImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -34,13 +36,16 @@ import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.openMocks;
 
 @SpringBootTest
-public class InterWalletInterWalletTransactionServiceTest {
+public class InterWalletTransactionsServiceTest {
 
     @Mock
     private UserDAO userDao;
 
     @Mock
     private InterWalletTransactionDAO interWalletTransactionDao;
+
+    @Mock
+    private IntraWalletTransactionsDAO intraWalletTransactionsDAO;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -55,7 +60,7 @@ public class InterWalletInterWalletTransactionServiceTest {
     private Authentication authentication;
 
     @InjectMocks
-    private InterWalletTransactionServicesImpl transactionService;
+    private TransactionsServicesImpl transactionService;
 
     @BeforeEach
     void setUp(){
@@ -251,7 +256,7 @@ public class InterWalletInterWalletTransactionServiceTest {
     }
 
     @Test
-    void expectAllTransactions() {
+    void expectInterWalletTransactions() {
         User sender = new User("sender","testPassword", Country.INDIA);
         User receiver = new User("receiver","testPassword", Country.INDIA);
         when(authentication.getName()).thenReturn("sender");
@@ -266,16 +271,18 @@ public class InterWalletInterWalletTransactionServiceTest {
         List<InterWalletTransaction> interWalletTransactions = Arrays.asList(firstInterWalletTransaction, secondInterWalletTransaction);
         when(userDao.findByUserName("sender")).thenReturn(Optional.of(sender));
         when(interWalletTransactionDao.findTransactionsOfUser(sender)).thenReturn(interWalletTransactions);
+        when(intraWalletTransactionsDAO.findByWallets(Arrays.asList(1))).thenReturn(Arrays.asList(withdrawal));
 
-        List<InterWalletTransactionResponseModel> response = transactionService.allTransactions();
+        TransactionsResponseModel response = transactionService.allTransactions();
 
-        assertEquals(2, response.size());
+        assertEquals(2, response.getInterWalletTransactions().size());
+        assertEquals(0, response.getIntraWalletTransactions().size());
         verify(userDao, times(1)).findByUserName("sender");
         verify(interWalletTransactionDao, times(1)).findTransactionsOfUser(sender);
     }
 
     @Test
-    void expectAllTransactionsDateBased() {
+    void expectInterTransactionsDateBased() {
         User sender = new User("sender", "senderPassword", Country.INDIA);
         User receiver = new User("receiver", "receiverPassword", Country.INDIA);
         LocalDateTime startDate = LocalDate.of(2022, 1, 1).atStartOfDay();
@@ -292,10 +299,12 @@ public class InterWalletInterWalletTransactionServiceTest {
         SecurityContextHolder.setContext(securityContext);
         when(userDao.findByUserName("sender")).thenReturn(Optional.of(sender));
         when(interWalletTransactionDao.findTransactionsOfUserDateBased(sender, startDate, endDate)).thenReturn(interWalletTransactions);
+        when(intraWalletTransactionsDAO.findByWallets(Arrays.asList(1))).thenReturn(Arrays.asList(withdrawal));
 
-        List<InterWalletTransactionResponseModel> response = transactionService.allTransactionsDateBased(startDate.toLocalDate(), endDate.toLocalDate());
+        TransactionsResponseModel response = transactionService.allTransactionsDateBased(startDate.toLocalDate(), endDate.toLocalDate());
 
-        assertEquals(1, response.size());
+        assertEquals(1, response.getInterWalletTransactions().size());
+        assertEquals(0, response.getIntraWalletTransactions().size());
         verify(interWalletTransactionDao, times(1)).findTransactionsOfUserDateBased(sender,startDate,endDate);
     }
 
@@ -324,12 +333,13 @@ public class InterWalletInterWalletTransactionServiceTest {
         when(userDao.findByUserName("sender")).thenReturn(Optional.of(sender));
         when(interWalletTransactionDao.findTransactionsOfUserDateBased(sender, startDate, endDate)).thenReturn(transactionsFiltered);
         when(interWalletTransactionDao.findTransactionsOfUser(sender)).thenReturn(allInterWalletTransactions);
+        when(intraWalletTransactionsDAO.findByWallets(Arrays.asList(1))).thenReturn(Arrays.asList(withdrawal,secondWithdrawal));
 
-        List<InterWalletTransactionResponseModel> responseDateBased = transactionService.allTransactionsDateBased(startDate.toLocalDate(), endDate.toLocalDate());
-        List<InterWalletTransactionResponseModel> responseWithoutDate = transactionService.allTransactions();
+        TransactionsResponseModel responseDateBased = transactionService.allTransactionsDateBased(startDate.toLocalDate(), endDate.toLocalDate());
+        TransactionsResponseModel responseWithoutDate = transactionService.allTransactions();
 
-        assertEquals(1, responseDateBased.size());
-        assertEquals(2, responseWithoutDate.size());
+        assertEquals(1, responseDateBased.getInterWalletTransactions().size());
+        assertEquals(2, responseWithoutDate.getInterWalletTransactions().size());
         verify(interWalletTransactionDao, times(1)).findTransactionsOfUser(sender);
         verify(interWalletTransactionDao, times(1)).findTransactionsOfUserDateBased(sender,startDate, endDate);
     }
